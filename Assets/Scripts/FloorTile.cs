@@ -17,9 +17,9 @@ public class FloorTile
         tile.transform.position = new Vector3(0.0f, dimensions.y * 0.5f, 0.0f) + position;
         walls = new List<GameObject>();
     }
-    public void setParent(GameObject parent)
+    public void setParent(GameObject parent, bool worldPositionStays)
     {
-        tile.transform.SetParent(parent.transform);
+        tile.transform.SetParent(parent.transform, worldPositionStays);
     }
     // Method to create a wall
     public void placeWall(Material material, float wallHeight, Direction direction)

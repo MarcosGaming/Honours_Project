@@ -12,7 +12,8 @@ public class RoomGenerator : MonoBehaviour
     [SerializeField] Vector3 floorTileDimensions;   // Dimensions of each floor tile
     [SerializeField] Material wallMaterial;         // Material of the walls
     [SerializeField] float wallHeight;              // Height of each wall
-    [SerializeField] int roomMaxDimensions;         // How big a room can be
+    [SerializeField] int roomWidth;                 // How big a room can be
+    [SerializeField] int roomHeight;
 
     // Start is called before the first frame update
     void Start()
@@ -29,6 +30,6 @@ public class RoomGenerator : MonoBehaviour
 
     private void createRoom()
     {
-        rooms.Add(new Room(roomMaxDimensions, new Vector3(0.0f,0.0f,0.0f), floorTileDimensions, floorMaterial, wallHeight, wallMaterial));
+        rooms.Add(new Room(new Vector3(0.0f,0.0f,0.0f), roomWidth, roomHeight, floorTileDimensions, floorMaterial, wallHeight, wallMaterial));
     }
 }
