@@ -170,6 +170,7 @@ MonoBehaviour:
   roomMaxTilesWidth: 10
   roomMinTilesHeight: 4
   roomMaxTilesHeight: 10
+  roomAndPartitionBorderMargin: 2
   floorMaterial: {fileID: 2100000, guid: 6f3b764d69dc4d04d8e2ce516d2dfaa3, type: 2}
   floorTileDimensions: {x: 2, y: 0.5, z: 2}
   wallMaterial: {fileID: 2100000, guid: 5f73475cf0cad364b9800b85c2a229fc, type: 2}
@@ -247,7 +248,8 @@ Light:
   m_BounceIntensity: 1
   m_ColorTemperature: 6570
   m_UseColorTemperature: 0
-  m_BoundingSphereOverride: {x: 0, y: 0, z: 0, w: 0}
+  m_BoundingSphereOverride: {x: 1.8393144e+25, y: 5.733417e-39, z: 1.4988622e+25,
+    w: 805.5847}
   m_UseBoundingSphereOverride: 0
   m_ShadowRadius: 0
   m_ShadowAngle: 0

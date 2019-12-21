@@ -9,14 +9,11 @@ public class DungeonGeneratorBSP : MonoBehaviour
     [SerializeField] int dungeonWidth;                      // Number of columns the dungeon grid is going to have
     [SerializeField] int dungeonHeight;                     // Number of rows the dungeon grid is going to have
 
-    [Min(4)]
     [SerializeField] int roomMinTilesWidth;                 // Minimum number of column cells a room needs to have
     [SerializeField] int roomMaxTilesWidth;                 // Maximum number of column cells a room can have
-    [Min(4)]
     [SerializeField] int roomMinTilesHeight;                // Minimum number of row cells a room needs to have
     [SerializeField] int roomMaxTilesHeight;                // Maximum number of row cells a room can have
 
-    [Min(2)]
     [SerializeField] int roomAndPartitionBorderMargin;      // Margin between the rooms and the edge of a partition
 
     [SerializeField] Material floorMaterial;                // Material that will be used for the floor
@@ -33,14 +30,23 @@ public class DungeonGeneratorBSP : MonoBehaviour
 
     private List<Corridor> corridors;                       // List of the corridors
 
+
     // Start is called before the first frame update
     void Start()
     {
         // Initialise corridors list
         corridors = new List<Corridor>();
-        // Modify dungeon width and height if less than the min room tiles width and height
-        dungeonWidth = Mathf.Max(dungeonWidth, roomMinTilesWidth);
-        dungeonHeight = Mathf.Max(dungeonHeight, roomMinTilesHeight);
+         // Make sure that the minimum width and height of a room is at least four tiles
+        roomMinTilesWidth = Mathf.Max(roomMinTilesWidth, 4);
+        roomMinTilesHeight = Mathf.Max(roomMinTilesHeight, 4);
+        // Make sure that the margin between a room and the partition border is at least two
+        roomAndPartitionBorderMargin = Mathf.Max(roomAndPartitionBorderMargin, 2);
+        // Make sure that the dungeon width and height selected by the user is at least twice as big the minimum room width and height with margins
+        dungeonWidth = Mathf.Max(dungeonWidth, roomMinTilesWidth * 2 + roomAndPartitionBorderMargin * 2);
+        dungeonHeight = Mathf.Max(dungeonHeight, roomMinTilesHeight * 2 + roomAndPartitionBorderMargin * 2);
+        // Make sure that the maximum width and height of a room is greater or equal to the minimum height and width of a room
+        roomMaxTilesWidth = Mathf.Max(roomMinTilesWidth, roomMaxTilesWidth);
+        roomMaxTilesHeight = Mathf.Max(roomMinTilesHeight, roomMaxTilesHeight);
         // Minimum partition width and height 
         minPartitionWidth = roomMinTilesWidth + roomAndPartitionBorderMargin;
         minPartitionHeight = roomMinTilesHeight + roomAndPartitionBorderMargin;
@@ -139,8 +145,8 @@ public class DungeonGeneratorBSP : MonoBehaviour
          // If the left child cannot be further subidivided create a room within its boundaries
          else
          {
-            leftChild.createPartitionRoom(ref dungeon, roomMinTilesWidth, roomMinTilesHeight, floorTileDimensions, floorMaterial, wallHeight, wallMaterial);
-        }
+            leftChild.createPartitionRoom(ref dungeon, roomMinTilesWidth, roomMaxTilesWidth, roomMinTilesHeight, roomMaxTilesHeight, floorTileDimensions, floorMaterial, wallHeight, wallMaterial);
+         }
         // Check if the right child can be further subdivided
         ref BSPNode rightChild = ref parent.getRightChildNode();
         // Partition can only be subdivided if there is enough space for two sub partitions
@@ -151,7 +157,7 @@ public class DungeonGeneratorBSP : MonoBehaviour
         // If the right child cannot be further subidivided create a room within its boundaries
         else
         {
-            rightChild.createPartitionRoom(ref dungeon, roomMinTilesWidth, roomMinTilesHeight, floorTileDimensions, floorMaterial, wallHeight, wallMaterial);
+            rightChild.createPartitionRoom(ref dungeon, roomMinTilesWidth, roomMaxTilesWidth, roomMinTilesHeight, roomMaxTilesHeight, floorTileDimensions, floorMaterial, wallHeight, wallMaterial);
         }
     }
 
@@ -293,7 +299,7 @@ public class DungeonGeneratorBSP : MonoBehaviour
             return true;
         }
 
-        public void createPartitionRoom(ref Dungeon dungeon, int roomMinTilesWidth, int roomMinTilesHeight, Vector3 floorTileDimensions, Material floorMaterial, float wallHeight, Material wallMaterial)
+        public void createPartitionRoom(ref Dungeon dungeon, int roomMinTilesWidth, int roomMaxTilesWidth, int roomMinTilesHeight, int roomMaxTilesHeight, Vector3 floorTileDimensions, Material floorMaterial, float wallHeight, Material wallMaterial)
         {
             // Get min and max values for the top left cell row and column for the room, taking into account the min room dimensions and that one row and one column are used as margins
             int minRow = this.topLeftCell.getCellRowPositionInGrid() + 1;
@@ -305,9 +311,11 @@ public class DungeonGeneratorBSP : MonoBehaviour
             int randomColumn = Random.Range(minColumn, maxColumn + 1);
             // Choose random width
             int maxWidth = this.topLeftCell.getCellColumnPositionInGrid() + this.width - 1 - randomColumn;
+            maxWidth = Mathf.Min(maxWidth, roomMaxTilesWidth);
             int randomWidth = Random.Range(roomMinTilesWidth, maxWidth + 1);
             // Choose random height
             int maxHeight = this.topLeftCell.getCellRowPositionInGrid() + this.height - 1 - randomRow;
+            maxHeight = Mathf.Min(maxHeight, roomMaxTilesHeight);
             int randomHeight = Random.Range(roomMinTilesHeight, maxHeight + 1);
             // Create room
             this.setPartitionRoom(new Room(ref dungeon, randomRow, randomColumn, randomHeight, randomWidth, floorTileDimensions, floorMaterial, wallHeight, wallMaterial));
