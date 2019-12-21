@@ -4,39 +4,180 @@ using UnityEngine;
 
 public class Corridor
 {
-    public Corridor(Room room1, Room room2, Vector3 floorTileDimensions, Material floorTileMaterial, float wallHeight, Material wallMaterial)
+    private GameObject corridor;            // Game object that represents the corridor
+    private List<FloorTile> corridorTiles;  // List of the tiles that form the corridor
+
+    public Corridor(ref Dungeon dungeon, ref Room room1, ref Room room2, Vector3 floorTileDimensions, Material floorTileMaterial, float wallHeight, Material wallMaterial)
     {
-        // Get room1 limits
-        float room1LeftLimit = room1.getRoomCenter().x - (floorTileDimensions.x * room1.getRoomWidth() * 0.5f);
-        float room1RightLimit = room1.getRoomCenter().x + (floorTileDimensions.x * room1.getRoomWidth() * 0.5f);
-        float room1UpLimit = room1.getRoomCenter().z + (floorTileDimensions.z * room1.getRoomHeight() * 0.5f);
-        float room1DownLimit = room1.getRoomCenter().z - (floorTileDimensions.z * room1.getRoomHeight() * 0.5f);
-        // Get room2 limits
-        float room2LeftLimit = room2.getRoomCenter().x - (floorTileDimensions.x * room2.getRoomWidth() * 0.5f);
-        float room2RightLimit = room2.getRoomCenter().x + (floorTileDimensions.x * room2.getRoomWidth() * 0.5f);
-        float room2UpLimit = room2.getRoomCenter().z + (floorTileDimensions.z * room2.getRoomHeight() * 0.5f);
-        float room2DownLimit = room2.getRoomCenter().z - (floorTileDimensions.z * room2.getRoomHeight() * 0.5f);
-        // Check if room 1 is between the right and left limits of room 2
-
-        // Check if room2 is between the right and left limits of room1
-        if (room1LeftLimit <= room2LeftLimit && room2LeftLimit <= room1RightLimit || room1LeftLimit <= room2RightLimit && room2RightLimit <= room1RightLimit)
+        // Initialize list
+        corridorTiles = new List<FloorTile>();
+        // Initialize game object
+        corridor = new GameObject();
+        corridor.name = "Corridor";
+        // Choose one random tile from room 1 and room 2
+        ref FloorTile randomRoom1Tile = ref room1.getFloorTiles()[Random.Range(0,room1.getRoomHeight() - 1),Random.Range(0, room1.getRoomWidth() - 1)];
+        ref FloorTile randomRoom2Tile = ref room2.getFloorTiles()[Random.Range(0, room2.getRoomHeight() - 1), Random.Range(0, room2.getRoomWidth() - 1)];
+        // Get the corresponding cell of each tile in the dungeon grid
+        ref DungeonCell startCell = ref randomRoom1Tile.getCorrespondingDungeonCell();
+        ref DungeonCell currentCell = ref randomRoom1Tile.getCorrespondingDungeonCell();
+        ref DungeonCell nextCell = ref randomRoom1Tile.getCorrespondingDungeonCell();
+        ref DungeonCell endCell = ref randomRoom2Tile.getCorrespondingDungeonCell();
+        // Traverse columns until the end cell column is reached
+        while(true)
         {
-            // Check if room2 has at least two tiles that can be connected directly to room1
-            if(Mathf.Abs(room1RightLimit - room2LeftLimit) > (floorTileDimensions.x * 2.0f) || Mathf.Abs(room2RightLimit - room1LeftLimit) > (floorTileDimensions.x * 2.0f))
+            // If grid cell is empty place floor tile normally
+            if (currentCell.getCellFloorTile() == null && currentCell.getCellColumnPositionInGrid() != endCell.getCellColumnPositionInGrid())
             {
-
+                // Create tile
+                FloorTile tile = new FloorTile(ref currentCell, floorTileMaterial, floorTileDimensions, currentCell.getCellWorldPosition(), TileType.CorridorTile);
+                // When traversing right or left the tile is going to need upper and down walls
+                tile.placeWall(wallMaterial, wallHeight, Direction.Up);
+                tile.placeWall(wallMaterial, wallHeight, Direction.Down);
+                // Add tile to the list of corridor tiles
+                corridorTiles.Add(tile);
+                currentCell.setCellFloorTile(ref tile);
             }
+            // Traverse right
+            if (currentCell.getCellColumnPositionInGrid() < endCell.getCellColumnPositionInGrid())
+            {
+                // If the grid cell has a tile with walls remove the ones that are not needed
+                if (currentCell.getCellFloorTile().getTileType() == TileType.RoomOuterTile || currentCell.getCellFloorTile().getTileType() == TileType.CorridorTile)
+                {
+                    // When traversing right always remove the right wall of current tile if there is one
+                    currentCell.getCellFloorTile().removeWall(Direction.Right);
+                }
+                // Get next cell
+                nextCell = ref dungeon.getDungeonGrid()[currentCell.getCellRowPositionInGrid(), currentCell.getCellColumnPositionInGrid() + 1];
+                // Remove left wall of next cell if there is one
+                if(nextCell.getCellFloorTile() != null)
+                {
+                    nextCell.getCellFloorTile().removeWall(Direction.Left);
+                }
+            }
+            // Traverse left
+            else if(currentCell.getCellColumnPositionInGrid() > endCell.getCellColumnPositionInGrid())
+            {
+                // If the grid cell has a tile with walls remove the ones that are not needed
+                if (currentCell.getCellFloorTile().getTileType() == TileType.RoomOuterTile || currentCell.getCellFloorTile().getTileType() == TileType.CorridorTile)
+                {
+                    // When traversing left always remove the left wall of current tile if there is one
+                    currentCell.getCellFloorTile().removeWall(Direction.Left);
+                }
+                nextCell = ref dungeon.getDungeonGrid()[currentCell.getCellRowPositionInGrid(), currentCell.getCellColumnPositionInGrid() - 1];
+                // Remove right wall of next cell if there is one
+                if (nextCell.getCellFloorTile() != null)
+                {
+                    nextCell.getCellFloorTile().removeWall(Direction.Right);
+                }
+            }
+            // Current cell column and end cell column are the same
+            else
+            {
+                // If grid cell is empty place floor tile with walls forming a corner
+                if (currentCell.getCellFloorTile() == null)
+                {
+                    // Check in which row direction (up or down) the corridor will go next
+                    Direction cornerWall1;
+                    if(currentCell.getCellRowPositionInGrid() < endCell.getCellRowPositionInGrid())
+                    {
+                        // If the corridor needs to go down the corner wall needs to be placed up the current tile
+                        cornerWall1 = Direction.Up;
+                    }
+                    else
+                    {
+                        // If the corridor needs to go up the corner wall needs to be placed down the current tile
+                        cornerWall1 = Direction.Down;
+                    }
+                    // Check if the start cell is at the right or left of the current cell
+                    Direction cornerWall2;
+                    if (startCell.getCellColumnPositionInGrid() < currentCell.getCellColumnPositionInGrid())
+                    {
+                        // When coming from the left, the wall of the corner corridor cell needs to be placed on the right
+                        cornerWall2 = Direction.Right;
+                    }
+                    else
+                    {
+                        // When coming from the right, the wall of the corner corridor cell needs to be placed on the left
+                        cornerWall2 = Direction.Left;
+                    }
+                    // Create tile
+                    FloorTile tile = new FloorTile(ref currentCell, floorTileMaterial, floorTileDimensions, currentCell.getCellWorldPosition(), TileType.CorridorTile);
+                    // Place corner tile walls
+                    tile.placeWall(wallMaterial, wallHeight, cornerWall1);
+                    tile.placeWall(wallMaterial, wallHeight, cornerWall2);
+                    // Add tile to the list of corridor tiles
+                    corridorTiles.Add(tile);
+                    currentCell.setCellFloorTile(ref tile);
+                }
+                // Exit loop
+                break;
+            }
+            // Set current cell to next cell
+            currentCell = ref nextCell;
         }
-        // Check if room2 is between up and down limits of room1
-        else if(room1DownLimit <= room2UpLimit && room2UpLimit <= room1UpLimit || room1DownLimit <= room2DownLimit && room2DownLimit <= room1UpLimit)
+        // Traverse rows until the end cell row is reached
+        while(true)
         {
-
+            // If grid cell is empty place floor tile normally
+            if (currentCell.getCellFloorTile() == null)
+            {
+                // Create tile
+                FloorTile tile = new FloorTile(ref currentCell, floorTileMaterial, floorTileDimensions, currentCell.getCellWorldPosition(), TileType.CorridorTile);
+                // When traversing up or down the tile is going to need right and left walls
+                tile.placeWall(wallMaterial, wallHeight, Direction.Right);
+                tile.placeWall(wallMaterial, wallHeight, Direction.Left);
+                // Add tile to the list of corridor tiles
+                corridorTiles.Add(tile);
+                currentCell.setCellFloorTile(ref tile);
+            }
+            // Traverse down
+            if (currentCell.getCellRowPositionInGrid() < endCell.getCellRowPositionInGrid())
+            {
+                // If the grid cell has a tile with walls remove the ones that are not needed
+                if (currentCell.getCellFloorTile().getTileType() == TileType.RoomOuterTile || currentCell.getCellFloorTile().getTileType() == TileType.CorridorTile)
+                {
+                    // When traversing down always remove the down wall of current tile if there is one
+                    currentCell.getCellFloorTile().removeWall(Direction.Down);
+                }
+                // Get next cell
+                nextCell = ref dungeon.getDungeonGrid()[currentCell.getCellRowPositionInGrid() + 1, currentCell.getCellColumnPositionInGrid()];
+                // Remove upper wall of next cell if there is one
+                if (nextCell.getCellFloorTile() != null)
+                {
+                    nextCell.getCellFloorTile().removeWall(Direction.Up);
+                }
+            }
+            // Traverse up
+            else if (currentCell.getCellRowPositionInGrid() > endCell.getCellRowPositionInGrid())
+            {
+                // If the grid cell has a tile with walls remove the ones that are not needed
+                if (currentCell.getCellFloorTile().getTileType() == TileType.RoomOuterTile || currentCell.getCellFloorTile().getTileType() == TileType.CorridorTile)
+                {
+                    // When traversing up always remove the upper wall of current tile if there is one
+                    currentCell.getCellFloorTile().removeWall(Direction.Up);
+                }
+                nextCell = ref dungeon.getDungeonGrid()[currentCell.getCellRowPositionInGrid() - 1, currentCell.getCellColumnPositionInGrid()];
+                // Remove down wall of next cell if there is one
+                if (nextCell.getCellFloorTile() != null)
+                {
+                    nextCell.getCellFloorTile().removeWall(Direction.Down);
+                }
+            }
+            // Current cell column and end cell column are the same, as the up or down traversal is done after the right or left, at this point the start and end cells are connected and no corners are needed
+            else
+            {
+                // Exit loop
+                break;
+            }
+            // Set current cell to next cell
+            currentCell = ref nextCell;
         }
-        else
+        // Set corridor game object in the tile at the middle of the tiles list
+        corridor.transform.position = corridorTiles[corridorTiles.Count/2].getCorrespondingDungeonCell().getCellWorldPosition();
+        // Set the tiles as children of the corridor game object
+        foreach(FloorTile tile in corridorTiles)
         {
-            // Connect rooms with an L shape corridor
-
+            tile.setParent(corridor, true);
         }
-
     }
 }
