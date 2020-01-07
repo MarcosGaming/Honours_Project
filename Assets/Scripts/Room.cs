@@ -4,11 +4,18 @@ using UnityEngine;
 
 public class Room
 {
-    private GameObject room;            // Empty game object that represents a room
-    private FloorTile[,] floorTiles;    // Grid of floor tiles
-    private Vector3 roomCenter;         // Center of room
-    private int roomWidth;              // Number of tile columns the room has
-    private int roomHeight;             // Number of tile rows the room has
+    private GameObject room;                    // Empty game object that represents a room
+
+    private FloorTile[,] floorTiles;            // Grid of floor tiles
+    private List<FloorTile> tilesUpRow;         // List of the floor tiles in the most up row of the room
+    private List<FloorTile> tilesDownRow;       // List of the floor tiles in the most down row of the room
+    private List<FloorTile> tilesLeftColumn;    // List of the floor tiles in the most left column of the room
+    private List<FloorTile> tilesRightColumn;   // List of the floor tiles in the most right column of the room
+
+    private Vector3 roomCenter;                 // Center of room
+
+    private int roomWidth;                      // Number of tile columns the room has
+    private int roomHeight;                     // Number of tile rows the room has
 
     public Room(ref Dungeon dungeon, int roomTopLeftCellRow, int roomTopLeftCellColumn, int roomHeight, int roomWidth, Vector3 floorTileDimensions, Material floorTileMaterial, float wallHeight, Material wallMaterial)
     {
@@ -42,24 +49,32 @@ public class Room
         {
             floorTiles[0, column].placeWall(wallMaterial, wallHeight, Direction.Up);
             floorTiles[0, column].setTileType(TileType.RoomOuterTile);
+            tilesUpRow = new List<FloorTile>();
+            tilesUpRow.Add(floorTiles[0, column]);
         }
         // Place walls in the lower row of tiles
         for (int column = 0; column < roomWidth; column++)
         {
             floorTiles[roomHeight - 1, column].placeWall(wallMaterial, wallHeight, Direction.Down);
             floorTiles[roomHeight - 1, column].setTileType(TileType.RoomOuterTile);
+            tilesDownRow = new List<FloorTile>();
+            tilesDownRow.Add(floorTiles[roomHeight - 1, column]);
         }
         // Place walls in the left column of tiles
         for (int row = 0; row < roomHeight; row++)
         {
             floorTiles[row, 0].placeWall(wallMaterial, wallHeight, Direction.Left);
             floorTiles[row, 0].setTileType(TileType.RoomOuterTile);
+            tilesLeftColumn = new List<FloorTile>();
+            tilesLeftColumn.Add(floorTiles[row, 0]);
         }
         // Place walls in the right column of tiles
         for (int row = 0; row < roomHeight; row++)
         {
             floorTiles[row, roomWidth - 1].placeWall(wallMaterial, wallHeight, Direction.Right);
             floorTiles[row, roomWidth - 1].setTileType(TileType.RoomOuterTile);
+            tilesRightColumn = new List<FloorTile>();
+            tilesRightColumn.Add(floorTiles[row, roomWidth - 1]);
         }
         // Set parent of floor tiles to be the room
         for (int i = 0; i < roomHeight; i++)
@@ -89,6 +104,26 @@ public class Room
     public ref FloorTile[,] getFloorTiles()
     {
         return ref floorTiles;
+    }
+
+    public ref List<FloorTile> getTilesUpRow()
+    {
+        return ref tilesUpRow;
+    }
+
+    public ref List<FloorTile> getTilesDownRow()
+    {
+        return ref tilesDownRow;
+    }
+
+    public ref List<FloorTile> getTilesLeftColumn()
+    {
+        return ref tilesLeftColumn;
+    }
+
+    public ref List<FloorTile> getTilesRightColumn()
+    {
+        return ref tilesRightColumn;
     }
 }
 

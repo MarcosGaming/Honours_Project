@@ -7,21 +7,62 @@ public class Corridor
     private GameObject corridor;            // Game object that represents the corridor
     private List<FloorTile> corridorTiles;  // List of the tiles that form the corridor
 
-    public Corridor(ref Dungeon dungeon, ref Room room1, ref Room room2, Vector3 floorTileDimensions, Material floorTileMaterial, float wallHeight, Material wallMaterial)
+    public Corridor(ref Dungeon dungeon, ref DungeonCell firstCell, ref DungeonCell lastCell, Direction dir, Vector3 floorTileDimensions, Material floorMaterial, float wallHeight, 
+        Material wallMaterial)
+    {
+        // Build corridor
+        BuildCorridor(ref dungeon, ref firstCell, ref lastCell, true, floorTileDimensions, floorMaterial, wallHeight, wallMaterial);
+        // Close last cell floor tile based on the direction the corridor had to be placed
+        ref FloorTile tile = ref lastCell.getCellFloorTile();
+        switch(dir)
+        {
+            case Direction.Up:
+                tile.placeWall(wallMaterial, wallHeight, Direction.Right);
+                tile.placeWall(wallMaterial, wallHeight, Direction.Left);
+                tile.placeWall(wallMaterial, wallHeight, Direction.Up);
+                break;
+            case Direction.Down:
+                tile.placeWall(wallMaterial, wallHeight, Direction.Right);
+                tile.placeWall(wallMaterial, wallHeight, Direction.Left);
+                tile.placeWall(wallMaterial, wallHeight, Direction.Down);
+                break;
+            case Direction.Left:
+                tile.placeWall(wallMaterial, wallHeight, Direction.Up);
+                tile.placeWall(wallMaterial, wallHeight, Direction.Down);
+                tile.placeWall(wallMaterial, wallHeight, Direction.Left);
+                break;
+            case Direction.Right:
+                tile.placeWall(wallMaterial, wallHeight, Direction.Up);
+                tile.placeWall(wallMaterial, wallHeight, Direction.Down);
+                tile.placeWall(wallMaterial, wallHeight, Direction.Right);
+                break;
+        }
+    }
+
+    public Corridor(ref Dungeon dungeon, ref Room room1, ref Room room2, Vector3 floorTileDimensions, Material floorMaterial, float wallHeight, Material wallMaterial)
+    {
+        // Choose one random tile from room 1 and room 2
+        ref FloorTile randomRoom1Tile = ref room1.getFloorTiles()[Random.Range(0, room1.getRoomHeight() - 1), Random.Range(0, room1.getRoomWidth() - 1)];
+        ref FloorTile randomRoom2Tile = ref room2.getFloorTiles()[Random.Range(0, room2.getRoomHeight() - 1), Random.Range(0, room2.getRoomWidth() - 1)];
+        // Build corridor
+        ref DungeonCell firstCell = ref randomRoom1Tile.getCorrespondingDungeonCell();
+        ref DungeonCell lastCell = ref randomRoom2Tile.getCorrespondingDungeonCell();
+        BuildCorridor(ref dungeon, ref firstCell, ref lastCell, false, floorTileDimensions, floorMaterial, wallHeight, wallMaterial);
+    }
+
+    private void BuildCorridor(ref Dungeon dungeon, ref DungeonCell firstCell, ref DungeonCell lastCell, bool leaveLastCellWalls, Vector3 floorDimensions, Material floorMaterial, 
+        float wallHeight, Material wallMaterial)
     {
         // Initialize list
         corridorTiles = new List<FloorTile>();
         // Initialize game object
         corridor = new GameObject();
         corridor.name = "Corridor";
-        // Choose one random tile from room 1 and room 2
-        ref FloorTile randomRoom1Tile = ref room1.getFloorTiles()[Random.Range(0,room1.getRoomHeight() - 1),Random.Range(0, room1.getRoomWidth() - 1)];
-        ref FloorTile randomRoom2Tile = ref room2.getFloorTiles()[Random.Range(0, room2.getRoomHeight() - 1), Random.Range(0, room2.getRoomWidth() - 1)];
-        // Get the corresponding cell of each tile in the dungeon grid
-        ref DungeonCell startCell = ref randomRoom1Tile.getCorrespondingDungeonCell();
-        ref DungeonCell currentCell = ref randomRoom1Tile.getCorrespondingDungeonCell();
-        ref DungeonCell nextCell = ref randomRoom1Tile.getCorrespondingDungeonCell();
-        ref DungeonCell endCell = ref randomRoom2Tile.getCorrespondingDungeonCell();
+        // Set necessary variables
+        ref DungeonCell startCell = ref firstCell;
+        ref DungeonCell currentCell = ref firstCell;
+        ref DungeonCell nextCell = ref firstCell;
+        ref DungeonCell endCell = ref lastCell;
         // Traverse columns until the end cell column is reached
         while(true)
         {
@@ -29,7 +70,7 @@ public class Corridor
             if (currentCell.getCellFloorTile() == null && currentCell.getCellColumnPositionInGrid() != endCell.getCellColumnPositionInGrid())
             {
                 // Create tile
-                FloorTile tile = new FloorTile(ref currentCell, floorTileMaterial, floorTileDimensions, currentCell.getCellWorldPosition(), TileType.CorridorTile);
+                FloorTile tile = new FloorTile(ref currentCell, floorMaterial, floorDimensions, currentCell.getCellWorldPosition(), TileType.CorridorTile);
                 // When traversing right or left the tile is going to need upper and down walls
                 tile.placeWall(wallMaterial, wallHeight, Direction.Up);
                 tile.placeWall(wallMaterial, wallHeight, Direction.Down);
@@ -101,10 +142,13 @@ public class Corridor
                         cornerWall2 = Direction.Left;
                     }
                     // Create tile
-                    FloorTile tile = new FloorTile(ref currentCell, floorTileMaterial, floorTileDimensions, currentCell.getCellWorldPosition(), TileType.CorridorTile);
+                    FloorTile tile = new FloorTile(ref currentCell, floorMaterial, floorDimensions, currentCell.getCellWorldPosition(), TileType.CorridorTile);
                     // Place corner tile walls
-                    tile.placeWall(wallMaterial, wallHeight, cornerWall1);
-                    tile.placeWall(wallMaterial, wallHeight, cornerWall2);
+                    if(!leaveLastCellWalls)
+                    {
+                        tile.placeWall(wallMaterial, wallHeight, cornerWall1);
+                        tile.placeWall(wallMaterial, wallHeight, cornerWall2);
+                    }
                     // Add tile to the list of corridor tiles
                     corridorTiles.Add(tile);
                     currentCell.setCellFloorTile(ref tile);
@@ -122,7 +166,7 @@ public class Corridor
             if (currentCell.getCellFloorTile() == null)
             {
                 // Create tile
-                FloorTile tile = new FloorTile(ref currentCell, floorTileMaterial, floorTileDimensions, currentCell.getCellWorldPosition(), TileType.CorridorTile);
+                FloorTile tile = new FloorTile(ref currentCell, floorMaterial, floorDimensions, currentCell.getCellWorldPosition(), TileType.CorridorTile);
                 // When traversing up or down the tile is going to need right and left walls
                 tile.placeWall(wallMaterial, wallHeight, Direction.Right);
                 tile.placeWall(wallMaterial, wallHeight, Direction.Left);
