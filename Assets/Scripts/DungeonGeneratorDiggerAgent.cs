@@ -56,7 +56,7 @@ public class DungeonGeneratorDiggerAgent : MonoBehaviour
             }
         }
         // Initialise digger
-        diggerAgent = new DiggerAgent(ref dungeon,ref dungeonRooms, ref dungeonCorridors, corridorMinTilesLength, corridorMaxTilesLength);
+        diggerAgent = new DiggerAgent(ref dungeon,ref dungeonRooms, ref dungeonCorridors, corridorMinTilesLength, corridorMaxTilesLength, removeDirtyCorridors);
         // Place digger in a random dungeon cell leaving a margin on the right and the bottom parts of the grid for the first room
         diggerAgent.SetDiggerInitialPosition(roomMinTilesWidth, roomMinTilesHeight);
         // Create dungeon
@@ -74,23 +74,27 @@ public class DungeonGeneratorDiggerAgent : MonoBehaviour
 
         private Dictionary<Direction, List<FloorTile>> lastRoomPlacedPossibleTiles; // Dictionary that contains the list of tiles of a room from which a corridor can be created  
         private List<Corridor> dirtyCorridors;                                      // List of corridors that one of their ends do not connect with a room
+        private bool removeDirtyCorridors;                                          // Whether to remove or not the corridors that have one end not ending in a room
 
         private bool roomPlaced;        // Whether a room has succesfully been placed in the current iteration of the DigDungeon method
         private bool corridorPlaced;    // Whether a corridor has succesfully been placed in the current iteration of the DigDungeon method
+        private bool tryAgain;          // When a corridor cannot be built from another corridor this boolean will be set to true to try to build a corridor from the last room created instead
 
         private int minCorridorsLength; // Minimum length of a corridor
         private int maxCorridorsLength; // Max length of a corridor
 
-        public DiggerAgent(ref Dungeon dungeon, ref List<Room> rooms, ref List<Corridor> corridors, int minCorridorsLength, int maxCorridorsLength)
+        public DiggerAgent(ref Dungeon dungeon, ref List<Room> rooms, ref List<Corridor> corridors, int minCorridorsLength, int maxCorridorsLength, bool removeDirtyCorridors)
         {
             this.dungeon = dungeon;
             this.rooms = rooms;
             this.corridors = corridors;
             this.minCorridorsLength = minCorridorsLength;
             this.maxCorridorsLength = maxCorridorsLength;
+            this.removeDirtyCorridors = removeDirtyCorridors;
             lastRoomPlacedPossibleTiles = new Dictionary<Direction, List<FloorTile>>();
             roomPlaced = false;
             corridorPlaced = false;
+            tryAgain = false;
         }
 
         public void SetDiggerInitialPosition(int roomMinTilesWidth, int roomMinTilesHeight)
@@ -154,7 +158,7 @@ public class DungeonGeneratorDiggerAgent : MonoBehaviour
             // Reset corridor placed boolean
             corridorPlaced = false;
             // If a room has been created in the current iteration, choose one of its outer tiles to create the corridor from it
-            if(roomPlaced)
+            if(roomPlaced || tryAgain)
             {
                 // Try to place a corridor from one of the four outter walls of a room
                 while(lastRoomPlacedPossibleTiles.Count > 0)
@@ -245,20 +249,51 @@ public class DungeonGeneratorDiggerAgent : MonoBehaviour
                     // Remove list
                     lastRoomPlacedPossibleTiles.Remove(randomDirection);
                 }
+                // Reset try again boolean
+                tryAgain = false;
             }
             else
             {
-                // Continue from last tile of last corridor
+                // Continue from last tile of last corridor which is the current cell based on the previous direction
+                if(direction == Direction.Up || direction == Direction.Down)
+                {
+                    // Try to go right or left
+                    int emptyTilesRight = CheckEmptyCellsRight();
+                    int emptyTilesLeft = CheckEmptyCellsLeft();
+                    if(emptyTilesRight > minCorridorsLength && emptyTilesLeft > minCorridorsLength)
+                    {
 
-                // If no corridor can be placed from the last corridor try again from the last room placed
+                    }
+                    else if(emptyTilesRight > minCorridorsLength)
+                    {
 
-                // Remove corridors that lead to nowhere based on the boolean set by the user
+                    }
+                    else if(emptyTilesLeft > minCorridorsLength)
+                    {
 
+                    }
+                    else
+                    {
+                        corridorPlaced = false;
+                    }
+                }
+                else
+                {
+
+                }
+                if(!corridorPlaced)
+                {
+                    // If no corridor can be placed from the last corridor try again from the last room placed
+                    tryAgain = true;
+                    // Remove corridors that lead to nowhere based on the boolean set by the user
+                    if(removeDirtyCorridors)
+                    {
+
+                    }
+                }
             }
-            // Try to create a corridor in any direction and with a length between the minimum and the maximum entered by the user
-
-            // If a room or a corridor was placed, continue digging the dungeon
-            if (roomPlaced || corridorPlaced)
+            // If a room or a corridor was placed or the algorithm is going to try again from the last room placed, continue digging the dungeon
+            if (roomPlaced || corridorPlaced || tryAgain)
             {
                 DigDungeon(roomMinWidth, roomMaxWidth, roomMinHeight, roomMaxHeight, tileDimensions, floorMaterial, wallHeight, wallMaterial);
             }
