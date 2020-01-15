@@ -14,7 +14,7 @@ public class Corridor
         BuildCorridor(ref dungeon, ref firstCell, ref lastCell, true, floorTileDimensions, floorMaterial, wallHeight, wallMaterial);
         // Close last cell floor tile based on the direction the corridor had to be placed
         ref FloorTile tile = ref lastCell.getCellFloorTile();
-        switch(dir)
+        switch (dir)
         {
             case Direction.Up:
                 tile.placeWall(wallMaterial, wallHeight, Direction.Right);
@@ -223,5 +223,15 @@ public class Corridor
         {
             tile.setParent(corridor, true);
         }
+    }
+
+    public void DestroyCorridor()
+    {
+        foreach(FloorTile tile in corridorTiles)
+        {
+            tile.DestroyFloorTile();
+        }
+        corridorTiles.Clear();
+        Object.Destroy(corridor);
     }
 }

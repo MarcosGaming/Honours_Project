@@ -2,8 +2,6 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public enum Direction { Up, Down, Right, Left };
-
 public enum TileType { RoomInnerTile, RoomOuterTile, CorridorTile };
 
 public class FloorTile
@@ -34,6 +32,11 @@ public class FloorTile
     // Method to create a wall
     public void placeWall(Material material, float wallHeight, Direction direction)
     {
+        // Do not place a wall twice
+        if(direction == Direction.Up && UpperWall != null || direction == Direction.Down && DownWall != null || direction == Direction.Right && RightWall != null || direction == Direction.Left && LeftWall != null)
+        {
+            return;
+        }
         GameObject wall = GameObject.CreatePrimitive(PrimitiveType.Cube);
         wall.GetComponent<MeshRenderer>().material = material;
         // Set the scale based on which direction the wall will be moved
@@ -115,7 +118,17 @@ public class FloorTile
                 break;
         }
     }
-    
+
+    public void DestroyFloorTile()
+    {
+        dungeonCell.removeFloorTile();
+        removeWall(Direction.Up);
+        removeWall(Direction.Down);
+        removeWall(Direction.Right);
+        removeWall(Direction.Left);
+        Object.Destroy(tile);
+    }
+
     public ref DungeonCell getCorrespondingDungeonCell()
     {
         return ref dungeonCell;

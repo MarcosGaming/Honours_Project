@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+public enum Direction { Up, Down, Right, Left, Unknown};
+
 public class Dungeon
 {
     private DungeonCell[,] dungeonGrid; // 2D grid that represents the dungeon
@@ -68,5 +70,10 @@ public class DungeonCell
     public ref FloorTile getCellFloorTile()
     {
         return ref floorTile;
+    }
+
+    public void removeFloorTile()
+    {
+        floorTile = null;
     }
 }

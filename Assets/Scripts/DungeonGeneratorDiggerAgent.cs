@@ -33,6 +33,7 @@ public class DungeonGeneratorDiggerAgent : MonoBehaviour
     void Start()
     {
         dungeonRooms = new List<Room>();
+        dungeonCorridors = new List<Corridor>();
         BuildDungeon();
     }
 
@@ -45,7 +46,7 @@ public class DungeonGeneratorDiggerAgent : MonoBehaviour
     private void BuildDungeon()
     {
         // Create dungeon grid
-        dungeon = new Dungeon(dungeonWidth, dungeonHeight);
+        dungeon = new Dungeon(dungeonHeight, dungeonWidth);
         ref DungeonCell[,] dungeonGrid = ref dungeon.getDungeonGrid();
         for (int i = 0; i < dungeonHeight; i++)
         {
@@ -75,6 +76,8 @@ public class DungeonGeneratorDiggerAgent : MonoBehaviour
         private Dictionary<Direction, List<FloorTile>> lastRoomPlacedPossibleTiles; // Dictionary that contains the list of tiles of a room from which a corridor can be created  
         private List<Corridor> dirtyCorridors;                                      // List of corridors that one of their ends do not connect with a room
         private bool removeDirtyCorridors;                                          // Whether to remove or not the corridors that have one end not ending in a room
+        private FloorTile lastTileUsedAsCorridorConnection;                         // Last tile from which corridors where created
+        private Direction directionOfWallToRebuild;                                 // Direction of the last tile wall that was removed to connect it with the corridors
 
         private bool roomPlaced;        // Whether a room has succesfully been placed in the current iteration of the DigDungeon method
         private bool corridorPlaced;    // Whether a corridor has succesfully been placed in the current iteration of the DigDungeon method
@@ -91,6 +94,7 @@ public class DungeonGeneratorDiggerAgent : MonoBehaviour
             this.minCorridorsLength = minCorridorsLength;
             this.maxCorridorsLength = maxCorridorsLength;
             this.removeDirtyCorridors = removeDirtyCorridors;
+            dirtyCorridors = new List<Corridor>();
             lastRoomPlacedPossibleTiles = new Dictionary<Direction, List<FloorTile>>();
             roomPlaced = false;
             corridorPlaced = false;
@@ -112,13 +116,50 @@ public class DungeonGeneratorDiggerAgent : MonoBehaviour
         {
             // Reset room placed boolean
             roomPlaced = false;
+            // If a corridor was placed in the previous iteration, the room needs to start from the next cell to the actual current cell based on the direcion the digger agent was going
+            DungeonCell previousCurrent = currentCell;
+            Direction directionToRemoveWall = Direction.Unknown;
+            if (corridorPlaced)
+            {
+                switch(direction)
+                {
+                    case Direction.Up:
+                        if(currentCell.getCellRowPositionInGrid() - 1 >= 0)
+                        {
+                            currentCell = dungeon.getDungeonGrid()[currentCell.getCellRowPositionInGrid() - 1, currentCell.getCellColumnPositionInGrid()];
+                            directionToRemoveWall = Direction.Down;
+                        }
+                        break;
+                    case Direction.Down:
+                        if(currentCell.getCellRowPositionInGrid() + 1 <= dungeon.getDungeonHeight() - 1)
+                        {
+                            currentCell = dungeon.getDungeonGrid()[currentCell.getCellRowPositionInGrid() + 1, currentCell.getCellColumnPositionInGrid()];
+                            directionToRemoveWall = Direction.Up;
+                        }
+                        break;
+                    case Direction.Left:
+                        if(currentCell.getCellColumnPositionInGrid() - 1 >= 0)
+                        {
+                            currentCell = dungeon.getDungeonGrid()[currentCell.getCellRowPositionInGrid(), currentCell.getCellColumnPositionInGrid() - 1];
+                            directionToRemoveWall = Direction.Right;
+                        }
+                        break;
+                    case Direction.Right:
+                        if(currentCell.getCellColumnPositionInGrid() + 1 <= dungeon.getDungeonWidth() - 1)
+                        {
+                            currentCell = dungeon.getDungeonGrid()[currentCell.getCellRowPositionInGrid(), currentCell.getCellColumnPositionInGrid() + 1];
+                            directionToRemoveWall = Direction.Left;
+                        }
+                        break;
+                }
+            }
             // Check the number of empty tiles from the currentCell in the four directions
-            int emptyCellsRight = CheckEmptyCellsRight(); ;
-            int emptyCellsLeft = CheckEmptyCellsLeft(); ;
+            int emptyCellsRight = CheckEmptyCellsRight();
+            int emptyCellsLeft = CheckEmptyCellsLeft();
             int emptyCellsUp = CheckEmptyCellsUp();
             int emptyCellsDown = CheckEmptyCellsDown();
             // Check if there is enough space to create a room
-            if(emptyCellsRight + emptyCellsLeft > roomMinWidth && emptyCellsUp + emptyCellsDown > roomMinHeight)
+            if (emptyCellsRight + emptyCellsLeft > roomMinWidth && emptyCellsUp + emptyCellsDown > roomMinHeight)
             {
                 // To make sure that one of the room tiles is placed in the current cell, the maximum distance to move the starting cell is the room minimum tiles height/width
                 int maximumDistanceUp = Mathf.Min(emptyCellsUp, roomMinHeight);
@@ -142,30 +183,67 @@ public class DungeonGeneratorDiggerAgent : MonoBehaviour
                 // Get random width and height
                 int randomRoomWidth = Random.Range(roomMinWidth, maxWidth);
                 int randomRoomHeight = Random.Range(roomMinHeight, maxHeight);
-                // Create new room
-                roomPlaced = true;
-                int row = currentCell.getCellRowPositionInGrid();
-                int column = currentCell.getCellColumnPositionInGrid();
-                rooms.Add(new Room(ref dungeon, row, column, randomRoomHeight, randomRoomWidth, tileDimensions, floorMaterial, wallHeight, wallMaterial));
-                roomPlaced = true;
-                // Get all possible tiles from which a corridor can be placed of the room currently added
-                lastRoomPlacedPossibleTiles.Clear();
-                lastRoomPlacedPossibleTiles.Add(Direction.Up, rooms[rooms.Count - 1].getTilesUpRow());
-                lastRoomPlacedPossibleTiles.Add(Direction.Down, rooms[rooms.Count - 1].getTilesDownRow());
-                lastRoomPlacedPossibleTiles.Add(Direction.Left, rooms[rooms.Count - 1].getTilesLeftColumn());
-                lastRoomPlacedPossibleTiles.Add(Direction.Right, rooms[rooms.Count - 1].getTilesRightColumn());
+                // Given the top left corner, width and height, make sure that the room can still be placed
+                bool allTilesEmpty = true;
+                for(int i = topLeftCornerRandomRow; i < (topLeftCornerRandomRow + randomRoomHeight); i++)
+                {
+                    for(int j = topLeftCornerRandomColumn; j < (topLeftCornerRandomColumn + randomRoomWidth); j++)
+                    {
+                        if(dungeon.getDungeonGrid()[i,j].getCellFloorTile() != null)
+                        {
+                            allTilesEmpty = false;
+                            break;
+                        }
+                    }
+                    if(!allTilesEmpty)
+                    {
+                        break;
+                    }
+                }
+                if(allTilesEmpty)
+                {
+                    // Create new room
+                    rooms.Add(new Room(ref dungeon, topLeftCornerRandomRow, topLeftCornerRandomColumn, randomRoomHeight, randomRoomWidth, tileDimensions, floorMaterial, wallHeight, wallMaterial));
+                    roomPlaced = true;
+                    // Get all possible tiles from which a corridor can be placed of the room currently added
+                    lastRoomPlacedPossibleTiles.Clear();
+                    lastRoomPlacedPossibleTiles.Add(Direction.Up, rooms[rooms.Count - 1].getTilesUpRow());
+                    lastRoomPlacedPossibleTiles.Add(Direction.Down, rooms[rooms.Count - 1].getTilesDownRow());
+                    lastRoomPlacedPossibleTiles.Add(Direction.Left, rooms[rooms.Count - 1].getTilesLeftColumn());
+                    lastRoomPlacedPossibleTiles.Add(Direction.Right, rooms[rooms.Count - 1].getTilesRightColumn());
+                    // Remove wall from the previous current cell to connect the room and the corridor, if a corridor was placed in the previous iteration
+                    if (corridorPlaced)
+                    {
+                        previousCurrent.getCellFloorTile().removeWall(direction);
+                        currentCell.getCellFloorTile().removeWall(directionToRemoveWall);
+                    }
+                }
+            }
+            if(!roomPlaced)
+            {
+                // If room could not be placed, then set the current to be the previous current to properly connect a corridor with another corridor
+                currentCell = previousCurrent;
             }
             // Reset corridor placed boolean
             corridorPlaced = false;
-            // If a room has been created in the current iteration, choose one of its outer tiles to create the corridor from it
+            // If a room has been created in the current iteration or no more corridors could be placed, choose one of the last room placed outer tiles to create the corridor from it
             if(roomPlaced || tryAgain)
             {
+                // Reset dirty corridors variables
+                dirtyCorridors.Clear();
+                lastTileUsedAsCorridorConnection = null;
+                directionOfWallToRebuild = Direction.Unknown;
                 // Try to place a corridor from one of the four outter walls of a room
-                while(lastRoomPlacedPossibleTiles.Count > 0)
+                while (lastRoomPlacedPossibleTiles.Count > 0)
                 {
                     // Choose random list
                     int i = Random.Range(0, lastRoomPlacedPossibleTiles.Count - 1);
+                    // Choose random list
                     Direction randomDirection = (Direction)Random.Range(0, System.Enum.GetValues(typeof(Direction)).Length);
+                    while (!lastRoomPlacedPossibleTiles.ContainsKey(randomDirection))
+                    {
+                        randomDirection = (Direction)Random.Range(0, System.Enum.GetValues(typeof(Direction)).Length);
+                    }
                     List<FloorTile> randomList = lastRoomPlacedPossibleTiles[randomDirection];
                     // Choose random tile until all tiles have been checked
                     while (randomList.Count > 0 && !corridorPlaced)
@@ -185,10 +263,10 @@ public class DungeonGeneratorDiggerAgent : MonoBehaviour
                                 if (emptyCells > minCorridorsLength)
                                 {
                                     // Choose random length
-                                    int length = Random.Range(minCorridorsLength, emptyCells);
+                                    int length = Random.Range(minCorridorsLength, emptyCells - 1);
                                     length = Mathf.Min(length, maxCorridorsLength);
                                     // Set last cell
-                                    lastCell = ref dungeon.getDungeonGrid()[currentCell.getCellRowPositionInGrid() - length + 1, currentCell.getCellColumnPositionInGrid()];
+                                    lastCell = ref dungeon.getDungeonGrid()[currentCell.getCellRowPositionInGrid() - length, currentCell.getCellColumnPositionInGrid()];
                                     buildCorridor = true;
                                 }
                                 break;
@@ -197,10 +275,10 @@ public class DungeonGeneratorDiggerAgent : MonoBehaviour
                                 if (emptyCells > minCorridorsLength)
                                 {
                                     // Choose random length
-                                    int length = Random.Range(minCorridorsLength, emptyCells);
+                                    int length = Random.Range(minCorridorsLength, emptyCells - 1);
                                     length = Mathf.Min(length, maxCorridorsLength);
                                     // Set last cell
-                                    lastCell = ref dungeon.getDungeonGrid()[currentCell.getCellRowPositionInGrid() + length - 1, currentCell.getCellColumnPositionInGrid()];
+                                    lastCell = ref dungeon.getDungeonGrid()[currentCell.getCellRowPositionInGrid() + length, currentCell.getCellColumnPositionInGrid()];
                                     buildCorridor = true;
                                 }
                                 break;
@@ -209,10 +287,10 @@ public class DungeonGeneratorDiggerAgent : MonoBehaviour
                                 if (emptyCells > minCorridorsLength)
                                 {
                                     // Choose random length
-                                    int length = Random.Range(minCorridorsLength, emptyCells);
+                                    int length = Random.Range(minCorridorsLength, emptyCells - 1);
                                     length = Mathf.Min(length, maxCorridorsLength);
                                     // Set last cell
-                                    lastCell = ref dungeon.getDungeonGrid()[currentCell.getCellRowPositionInGrid(), currentCell.getCellColumnPositionInGrid() - length + 1];
+                                    lastCell = ref dungeon.getDungeonGrid()[currentCell.getCellRowPositionInGrid(), currentCell.getCellColumnPositionInGrid() - length];
                                     buildCorridor = true;
                                 }
                                 break;
@@ -221,10 +299,10 @@ public class DungeonGeneratorDiggerAgent : MonoBehaviour
                                 if (emptyCells > minCorridorsLength)
                                 {
                                     // Choose random length
-                                    int length = Random.Range(minCorridorsLength, emptyCells);
+                                    int length = Random.Range(minCorridorsLength, emptyCells - 1);
                                     length = Mathf.Min(length, maxCorridorsLength);
                                     // Set last cell
-                                    lastCell = ref dungeon.getDungeonGrid()[currentCell.getCellRowPositionInGrid(), currentCell.getCellColumnPositionInGrid() + length - 1];
+                                    lastCell = ref dungeon.getDungeonGrid()[currentCell.getCellRowPositionInGrid(), currentCell.getCellColumnPositionInGrid() + length];
                                     buildCorridor = true;
                                 }
                                 break;
@@ -235,6 +313,14 @@ public class DungeonGeneratorDiggerAgent : MonoBehaviour
                             // Build corridor between first and last cell
                             corridors.Add(new Corridor(ref dungeon, ref currentCell, ref lastCell, randomDirection, tileDimensions, floorMaterial, wallHeight, wallMaterial));
                             corridorPlaced = true;
+                            // Add the corridor to the dirty corridors list
+                            dirtyCorridors.Add(corridors[corridors.Count - 1]);
+                            // Set the current cell (outer room cell) as the last cell used as connection
+                            lastTileUsedAsCorridorConnection = currentCell.getCellFloorTile();
+                            // Set the direction of the tile wall that will need to be removed
+                            directionOfWallToRebuild = randomDirection;
+                            // Set direction to randomDirection
+                            direction = randomDirection;
                             // Set current cell to the last cell of the corridor
                             currentCell = lastCell;
                         }
@@ -260,26 +346,140 @@ public class DungeonGeneratorDiggerAgent : MonoBehaviour
                     // Try to go right or left
                     int emptyTilesRight = CheckEmptyCellsRight();
                     int emptyTilesLeft = CheckEmptyCellsLeft();
-                    if(emptyTilesRight > minCorridorsLength && emptyTilesLeft > minCorridorsLength)
+                    Direction directionToDig = direction;
+                    if (emptyTilesRight > minCorridorsLength && emptyTilesLeft > minCorridorsLength)
                     {
-
+                        // If digger can go in both directions choose one randomly
+                        if (Random.Range(0.0f, 1.0f) > 0.5f)
+                        {
+                            // Dig right
+                            directionToDig = Direction.Right;
+                        }
+                        else
+                        {
+                            // Dig left
+                            directionToDig = Direction.Left;
+                        }
                     }
                     else if(emptyTilesRight > minCorridorsLength)
                     {
-
+                        // Digger can only go right
+                        directionToDig = Direction.Right;
                     }
                     else if(emptyTilesLeft > minCorridorsLength)
                     {
-
+                        // Digger can only go left
+                        directionToDig = Direction.Left;
+                    }
+                    // Dig corridor if direction is either right or left
+                    bool buildCorridor = false;
+                    ref DungeonCell lastCell = ref currentCell;
+                    switch (directionToDig)
+                    {
+                        case Direction.Right:
+                            // Choose random length to dig right
+                            int randomLength = Random.Range(minCorridorsLength, emptyTilesRight - 1);
+                            randomLength = Mathf.Min(maxCorridorsLength, randomLength);
+                            // Set last cell
+                            lastCell = ref dungeon.getDungeonGrid()[currentCell.getCellRowPositionInGrid(), currentCell.getCellColumnPositionInGrid() + randomLength];
+                            buildCorridor = true;
+                            break;
+                        case Direction.Left:
+                            // Choose random length to dig left
+                            randomLength = Random.Range(minCorridorsLength, emptyTilesLeft - 1);
+                            randomLength = Mathf.Min(maxCorridorsLength, randomLength);
+                            // Set last cell
+                            lastCell = ref dungeon.getDungeonGrid()[currentCell.getCellRowPositionInGrid(), currentCell.getCellColumnPositionInGrid() - randomLength];
+                            buildCorridor = true;
+                            break;
+                    }
+                    if(buildCorridor)
+                    {
+                        // Build corridor between first and last cell
+                        corridors.Add(new Corridor(ref dungeon, ref currentCell, ref lastCell, directionToDig, tileDimensions, floorMaterial, wallHeight, wallMaterial));
+                        corridorPlaced = true;
+                        // Add the corridor to the dirty corridors list
+                        dirtyCorridors.Add(corridors[corridors.Count - 1]);
+                        // Set direction
+                        direction = directionToDig;
+                        // Set current cell to the last cell of the corridor
+                        currentCell = lastCell;
                     }
                     else
                     {
+                        // There is no space for the digger to place a new corridor
                         corridorPlaced = false;
                     }
                 }
                 else
                 {
-
+                    // Try to go up or down
+                    int emptyTilesUp = CheckEmptyCellsUp();
+                    int emptyTilesDown = CheckEmptyCellsDown();
+                    Direction directionToDig = direction;
+                    if (emptyTilesUp > minCorridorsLength && emptyTilesDown > minCorridorsLength)
+                    {
+                        // If digger can go in both directions choose one randomly
+                        if (Random.Range(0.0f, 1.0f) > 0.5f)
+                        {
+                            // Dig up
+                            directionToDig = Direction.Up;
+                        }
+                        else
+                        {
+                            // Dig down
+                            directionToDig = Direction.Down;
+                        }
+                    }
+                    else if (emptyTilesUp > minCorridorsLength)
+                    {
+                        // Digger can only go right
+                        directionToDig = Direction.Up;
+                    }
+                    else if (emptyTilesDown > minCorridorsLength)
+                    {
+                        // Digger can only go left
+                        directionToDig = Direction.Down;
+                    }
+                    // Dig corridor if direction is either up or down
+                    bool buildCorridor = false;
+                    ref DungeonCell lastCell = ref currentCell;
+                    switch (directionToDig)
+                    {
+                        case Direction.Up:
+                            // Choose random length to dig up
+                            int randomLength = Random.Range(minCorridorsLength, emptyTilesUp - 1);
+                            randomLength = Mathf.Min(maxCorridorsLength, randomLength);
+                            // Set last cell
+                            lastCell = ref dungeon.getDungeonGrid()[currentCell.getCellRowPositionInGrid() - randomLength, currentCell.getCellColumnPositionInGrid()];
+                            buildCorridor = true;
+                            break;
+                        case Direction.Down:
+                            // Choose random length to dig down
+                            randomLength = Random.Range(minCorridorsLength, emptyTilesDown - 1);
+                            randomLength = Mathf.Min(maxCorridorsLength, randomLength);
+                            // Set last cell
+                            lastCell = ref dungeon.getDungeonGrid()[currentCell.getCellRowPositionInGrid() + randomLength, currentCell.getCellColumnPositionInGrid()];
+                            buildCorridor = true;
+                            break;
+                    }
+                    if (buildCorridor)
+                    {
+                        // Build corridor between first and last cell
+                        corridors.Add(new Corridor(ref dungeon, ref currentCell, ref lastCell, directionToDig, tileDimensions, floorMaterial, wallHeight, wallMaterial));
+                        corridorPlaced = true;
+                        // Add the corridor to the dirty corridors list
+                        dirtyCorridors.Add(corridors[corridors.Count - 1]);
+                        // Set direction
+                        direction = directionToDig;
+                        // Set current cell to the last cell of the corridor
+                        currentCell = lastCell;
+                    }
+                    else
+                    {
+                        // There is no space for the digger to place a new corridor
+                        corridorPlaced = false;
+                    }
                 }
                 if(!corridorPlaced)
                 {
@@ -288,7 +488,19 @@ public class DungeonGeneratorDiggerAgent : MonoBehaviour
                     // Remove corridors that lead to nowhere based on the boolean set by the user
                     if(removeDirtyCorridors)
                     {
-
+                        foreach(Corridor corridor in dirtyCorridors)
+                        {
+                            corridor.DestroyCorridor();
+                        }
+                        dirtyCorridors.Clear();
+                        // Rebuild the wall destroyed to connect the room with the corridors
+                        if(lastTileUsedAsCorridorConnection != null)
+                        {
+                            lastTileUsedAsCorridorConnection.placeWall(wallMaterial, wallHeight, directionOfWallToRebuild);
+                        }
+                        // Reset dirty variables
+                        lastTileUsedAsCorridorConnection = null;
+                        directionOfWallToRebuild = Direction.Unknown;
                     }
                 }
             }
@@ -307,7 +519,7 @@ public class DungeonGeneratorDiggerAgent : MonoBehaviour
             while (true)
             {
                 // Check if cell is empty
-                if (cellToCheck.getCellFloorTile() != null)
+                if (cellToCheck.getCellFloorTile() != null && cellToCheck != currentCell)
                 {
                     break;
                 }
@@ -331,7 +543,7 @@ public class DungeonGeneratorDiggerAgent : MonoBehaviour
             while (true)
             {
                 // Check if cell is empty
-                if (cellToCheck.getCellFloorTile() != null)
+                if (cellToCheck.getCellFloorTile() != null && cellToCheck != currentCell)
                 {
                     break;
                 }
@@ -355,7 +567,7 @@ public class DungeonGeneratorDiggerAgent : MonoBehaviour
             while (true)
             {
                 // Check if the cell is empty
-                if (cellToCheck.getCellFloorTile() != null)
+                if (cellToCheck.getCellFloorTile() != null && cellToCheck != currentCell)
                 {
                     break;
                 }
@@ -379,7 +591,7 @@ public class DungeonGeneratorDiggerAgent : MonoBehaviour
             while (true)
             {
                 // Check if the cell is empty
-                if (cellToCheck.getCellFloorTile() != null)
+                if (cellToCheck.getCellFloorTile() != null && cellToCheck != currentCell)
                 {
                     break;
                 }
