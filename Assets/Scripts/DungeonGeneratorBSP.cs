@@ -36,7 +36,13 @@ public class DungeonGeneratorBSP : MonoBehaviour
     {
         // Initialise corridors list
         corridors = new List<Corridor>();
-         // Make sure that the minimum width and height of a room is at least four tiles
+        // Make sure that the wall height is at least one
+        wallHeight = Mathf.Max(1.0f, wallHeight);
+        // Make sure that the tile dimensions are at least 1,0.5,1
+        floorTileDimensions.x = Mathf.Max(1.0f, floorTileDimensions.x);
+        floorTileDimensions.y = Mathf.Max(0.5f, floorTileDimensions.y);
+        floorTileDimensions.z = Mathf.Max(1.0f, floorTileDimensions.z);
+        // Make sure that the minimum width and height of a room is at least four tiles
         roomMinTilesWidth = Mathf.Max(roomMinTilesWidth, 4);
         roomMinTilesHeight = Mathf.Max(roomMinTilesHeight, 4);
         // Make sure that the margin between a room and the partition border is at least two

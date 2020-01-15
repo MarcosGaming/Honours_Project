@@ -170,12 +170,13 @@ MonoBehaviour:
   roomMaxTilesWidth: 10
   roomMinTilesHeight: 4
   roomMaxTilesHeight: 10
-  corridorMinTilesLength: 2
+  corridorMinTilesLength: 4
   corridorMaxTilesLength: 8
   floorMaterial: {fileID: 2100000, guid: 6f3b764d69dc4d04d8e2ce516d2dfaa3, type: 2}
   floorTileDimensions: {x: 2, y: 0.5, z: 2}
   wallMaterial: {fileID: 2100000, guid: 417d3ef38761e434d91ee72bf63b5b44, type: 2}
   wallHeight: 3
+  removeDirtyCorridors: 1
 --- !u!1 &1931331459
 GameObject:
   m_ObjectHideFlags: 0

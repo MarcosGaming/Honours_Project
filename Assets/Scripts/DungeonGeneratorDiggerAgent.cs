@@ -32,8 +32,28 @@ public class DungeonGeneratorDiggerAgent : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
+        // Initialise lists
         dungeonRooms = new List<Room>();
         dungeonCorridors = new List<Corridor>();
+        // Make sure that the wall height is at least one
+        wallHeight = Mathf.Max(1.0f, wallHeight);
+        // Make sure that the tile dimensions are at least 1,0.5,1
+        floorTileDimensions.x = Mathf.Max(1.0f, floorTileDimensions.x);
+        floorTileDimensions.y = Mathf.Max(0.5f, floorTileDimensions.y);
+        floorTileDimensions.z = Mathf.Max(1.0f, floorTileDimensions.z);
+        // Make sure that the minimum width and height of a room is at least four tiles
+        roomMinTilesWidth = Mathf.Max(roomMinTilesWidth, 4);
+        roomMinTilesHeight = Mathf.Max(roomMinTilesHeight, 4);
+        // Make sure that the min corridor width is at least 2
+        corridorMinTilesLength = Mathf.Max(corridorMinTilesLength, 2);
+        // Make sure that the dungeon width and height selected by the user is at least twice as big the minimum room width and height
+        dungeonWidth = Mathf.Max(dungeonWidth, roomMinTilesWidth * 2);
+        dungeonHeight = Mathf.Max(dungeonHeight, roomMinTilesHeight * 2);
+        // Make sure that the maximum width and height of a room is greater or equal to the minimum height and width of a room
+        roomMaxTilesWidth = Mathf.Max(roomMinTilesWidth, roomMaxTilesWidth);
+        roomMaxTilesHeight = Mathf.Max(roomMinTilesHeight, roomMaxTilesHeight);
+        // Make sure that the maximum corridor length is greater or equal to the minimum length of a corridor
+        corridorMaxTilesLength = Mathf.Max(corridorMinTilesLength, corridorMaxTilesLength);
         BuildDungeon();
     }
 
