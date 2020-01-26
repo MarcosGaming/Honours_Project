@@ -13,45 +13,58 @@ public abstract class AlphabetNode
     // Whether the node is terminal or non-terminal
     protected bool terminal;
 
-    public void setLeftConnection(ref AlphabetNode node)
+    public void setConnection(Direction dir, AlphabetNode node)
     {
-        leftConnection = node;
+        switch(dir)
+        {
+            case Direction.Right:
+                rightConnection = node;
+                break;
+            case Direction.Left:
+                leftConnection = node;
+                break;
+            case Direction.Up:
+                upConnection = node;
+                break;
+            case Direction.Down:
+                downConnection = node;
+                break;
+        }
     }
 
-    public ref AlphabetNode getLeftConnection()
+    public AlphabetNode getConnection(Direction dir)
     {
-        return ref leftConnection;
+        switch (dir)
+        {
+            case Direction.Right:
+                return rightConnection;
+            case Direction.Left:
+                return leftConnection;
+            case Direction.Up:
+                return upConnection;
+            case Direction.Down:
+                return downConnection;
+        }
+        return null;
     }
 
-    public void setRightConnection(ref AlphabetNode node)
+    public void removeConnection(Direction dir)
     {
-        rightConnection = node;
-    }
-
-    public ref AlphabetNode getRightConnection()
-    {
-        return ref rightConnection;
-    }
-
-
-    public void setUpConnection(ref AlphabetNode node)
-    {
-        upConnection = node;
-    }
-
-    public ref AlphabetNode getUpConnection()
-    {
-        return ref upConnection;
-    }
-
-    public void setDownConnection(ref AlphabetNode node)
-    {
-        downConnection = node;
-    }
-
-    public ref AlphabetNode getDownConnection()
-    {
-        return ref downConnection;
+        switch (dir)
+        {
+            case Direction.Right:
+                rightConnection = null;
+                break;
+            case Direction.Left:
+                leftConnection = null;
+                break;
+            case Direction.Up:
+                upConnection = null;
+                break;
+            case Direction.Down:
+                downConnection = null;
+                break;
+        }
     }
 
     public void setAsTerminal()
