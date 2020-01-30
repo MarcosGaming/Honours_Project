@@ -8,38 +8,52 @@ public class Corridor
     private List<FloorTile> corridorTiles;  // List of the tiles that form the corridor
 
     public Corridor(ref Dungeon dungeon, ref DungeonCell firstCell, ref DungeonCell lastCell, Direction dir, Vector3 floorTileDimensions, Material floorMaterial, float wallHeight, 
-        Material wallMaterial)
+        Material wallMaterial, bool closeLastCell)
     {
         // Build corridor
         BuildCorridor(ref dungeon, ref firstCell, ref lastCell, true, floorTileDimensions, floorMaterial, wallHeight, wallMaterial);
         // Close last cell floor tile based on the direction the corridor had to be placed
         ref FloorTile tile = ref lastCell.getCellFloorTile();
-        switch (dir)
+        if(closeLastCell)
         {
-            case Direction.Up:
-                tile.placeWall(wallMaterial, wallHeight, Direction.Right);
-                tile.placeWall(wallMaterial, wallHeight, Direction.Left);
-                tile.placeWall(wallMaterial, wallHeight, Direction.Up);
-                break;
-            case Direction.Down:
-                tile.placeWall(wallMaterial, wallHeight, Direction.Right);
-                tile.placeWall(wallMaterial, wallHeight, Direction.Left);
-                tile.placeWall(wallMaterial, wallHeight, Direction.Down);
-                break;
-            case Direction.Left:
-                tile.placeWall(wallMaterial, wallHeight, Direction.Up);
-                tile.placeWall(wallMaterial, wallHeight, Direction.Down);
-                tile.placeWall(wallMaterial, wallHeight, Direction.Left);
-                break;
-            case Direction.Right:
-                tile.placeWall(wallMaterial, wallHeight, Direction.Up);
-                tile.placeWall(wallMaterial, wallHeight, Direction.Down);
-                tile.placeWall(wallMaterial, wallHeight, Direction.Right);
-                break;
+            switch (dir)
+            {
+                case Direction.Up:
+                    tile.placeWall(wallMaterial, wallHeight, Direction.Right);
+                    tile.placeWall(wallMaterial, wallHeight, Direction.Left);
+                    tile.placeWall(wallMaterial, wallHeight, Direction.Up);
+                    break;
+                case Direction.Down:
+                    tile.placeWall(wallMaterial, wallHeight, Direction.Right);
+                    tile.placeWall(wallMaterial, wallHeight, Direction.Left);
+                    tile.placeWall(wallMaterial, wallHeight, Direction.Down);
+                    break;
+                case Direction.Left:
+                    tile.placeWall(wallMaterial, wallHeight, Direction.Up);
+                    tile.placeWall(wallMaterial, wallHeight, Direction.Down);
+                    tile.placeWall(wallMaterial, wallHeight, Direction.Left);
+                    break;
+                case Direction.Right:
+                    tile.placeWall(wallMaterial, wallHeight, Direction.Up);
+                    tile.placeWall(wallMaterial, wallHeight, Direction.Down);
+                    tile.placeWall(wallMaterial, wallHeight, Direction.Right);
+                    break;
+            }
         }
     }
 
     public Corridor(ref Dungeon dungeon, ref Room room1, ref Room room2, Vector3 floorTileDimensions, Material floorMaterial, float wallHeight, Material wallMaterial)
+    {
+        // Choose one random tile from room 1 and room 2
+        ref FloorTile randomRoom1Tile = ref room1.getFloorTiles()[Random.Range(0, room1.getRoomHeight() - 1), Random.Range(0, room1.getRoomWidth() - 1)];
+        ref FloorTile randomRoom2Tile = ref room2.getFloorTiles()[Random.Range(0, room2.getRoomHeight() - 1), Random.Range(0, room2.getRoomWidth() - 1)];
+        // Build corridor
+        ref DungeonCell firstCell = ref randomRoom1Tile.getCorrespondingDungeonCell();
+        ref DungeonCell lastCell = ref randomRoom2Tile.getCorrespondingDungeonCell();
+        BuildCorridor(ref dungeon, ref firstCell, ref lastCell, false, floorTileDimensions, floorMaterial, wallHeight, wallMaterial);
+    }
+
+    public Corridor(ref Dungeon dungeon, Room room1, Room room2, Vector3 floorTileDimensions, Material floorMaterial, float wallHeight, Material wallMaterial)
     {
         // Choose one random tile from room 1 and room 2
         ref FloorTile randomRoom1Tile = ref room1.getFloorTiles()[Random.Range(0, room1.getRoomHeight() - 1), Random.Range(0, room1.getRoomWidth() - 1)];

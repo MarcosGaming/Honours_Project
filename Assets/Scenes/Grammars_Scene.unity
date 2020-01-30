@@ -163,6 +163,20 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9de7d1cbe2a60d84998b4f10867ee478, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  dungeonTopLeftCellPosition: {x: 0, y: 0, z: 0}
+  minTaskNumber: 10
+  maxTaskNumber: 20
+  minOrganizeTasksTries: 20
+  maxOrganizeTasksTries: 30
+  probabiltyApplyOrganizationRule: 0.8
+  roomMinTilesWidth: 4
+  roomMaxTilesWidth: 10
+  roomMinTilesHeight: 4
+  roomMaxTilesHeight: 10
+  floorMaterial: {fileID: 2100000, guid: 6f3b764d69dc4d04d8e2ce516d2dfaa3, type: 2}
+  floorTileDimensions: {x: 2, y: 0.5, z: 2}
+  wallMaterial: {fileID: 2100000, guid: 5f73475cf0cad364b9800b85c2a229fc, type: 2}
+  wallHeight: 4
 --- !u!1 &1138802728
 GameObject:
   m_ObjectHideFlags: 0

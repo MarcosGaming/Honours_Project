@@ -22,6 +22,11 @@ public class Room
         // Create empty game object for the room
         room = new GameObject();
         room.name = "Room";
+        // Initialise lists
+        tilesUpRow = new List<FloorTile>();
+        tilesDownRow = new List<FloorTile>();
+        tilesLeftColumn = new List<FloorTile>();
+        tilesRightColumn = new List<FloorTile>();
         // Get corner position of the room in the world to place the empty game object in the middle of where the room is going to be
         ref DungeonCell[,] grid = ref dungeon.getDungeonGrid();
         Vector3 corner = grid[roomTopLeftCellRow, roomTopLeftCellColumn].getCellWorldPosition() + new Vector3(-floorTileDimensions.x * 0.5f, 0.0f, floorTileDimensions.z * 0.5f);
@@ -49,7 +54,6 @@ public class Room
         {
             floorTiles[0, column].placeWall(wallMaterial, wallHeight, Direction.Up);
             floorTiles[0, column].setTileType(TileType.RoomOuterTile);
-            tilesUpRow = new List<FloorTile>();
             tilesUpRow.Add(floorTiles[0, column]);
         }
         // Place walls in the lower row of tiles
@@ -57,7 +61,6 @@ public class Room
         {
             floorTiles[roomHeight - 1, column].placeWall(wallMaterial, wallHeight, Direction.Down);
             floorTiles[roomHeight - 1, column].setTileType(TileType.RoomOuterTile);
-            tilesDownRow = new List<FloorTile>();
             tilesDownRow.Add(floorTiles[roomHeight - 1, column]);
         }
         // Place walls in the left column of tiles
@@ -65,7 +68,6 @@ public class Room
         {
             floorTiles[row, 0].placeWall(wallMaterial, wallHeight, Direction.Left);
             floorTiles[row, 0].setTileType(TileType.RoomOuterTile);
-            tilesLeftColumn = new List<FloorTile>();
             tilesLeftColumn.Add(floorTiles[row, 0]);
         }
         // Place walls in the right column of tiles
@@ -73,7 +75,6 @@ public class Room
         {
             floorTiles[row, roomWidth - 1].placeWall(wallMaterial, wallHeight, Direction.Right);
             floorTiles[row, roomWidth - 1].setTileType(TileType.RoomOuterTile);
-            tilesRightColumn = new List<FloorTile>();
             tilesRightColumn.Add(floorTiles[row, roomWidth - 1]);
         }
         // Set parent of floor tiles to be the room

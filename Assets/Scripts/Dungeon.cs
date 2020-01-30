@@ -22,6 +22,18 @@ public class Dungeon
         return ref dungeonGrid;
     }
 
+    public void createDungeonGrid(Vector3 dungeonTopLeftCellPosition, Vector3 floorTileDimensions)
+    {
+        for (int i = 0; i < dungeonHeight; i++)
+        {
+            for (int j = 0; j < dungeonWidth; j++)
+            {
+                Vector3 cellPosition = dungeonTopLeftCellPosition + new Vector3(floorTileDimensions.x * j, floorTileDimensions.y, -floorTileDimensions.z * i);
+                dungeonGrid[i, j] = new DungeonCell(cellPosition, i, j);
+            }
+        }
+    }
+
     public int getDungeonWidth()
     {
         return dungeonWidth;

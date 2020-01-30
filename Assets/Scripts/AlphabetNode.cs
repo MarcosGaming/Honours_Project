@@ -111,6 +111,15 @@ public class TaskNode : AlphabetNode
     }
 }
 
+public class FarTaskNode : AlphabetNode
+{
+    public FarTaskNode()
+    {
+        // Default terminality of a far task node is terminal
+        this.terminal = true;
+    }
+}
+
 // Room that the player needs to reach to progress to the next level, always a terminal node
 public class GoalNode : AlphabetNode
 {

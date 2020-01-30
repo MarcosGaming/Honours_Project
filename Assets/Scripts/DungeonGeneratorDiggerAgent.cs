@@ -359,7 +359,7 @@ public class DungeonGeneratorDiggerAgent : MonoBehaviour
                         // Set last cell
                         lastCell = ref dungeon.getDungeonGrid()[currentCell.getCellRowPositionInGrid() + (rowLengthMultiplier * length), currentCell.getCellColumnPositionInGrid() + (columnLengthMultiplier * length)];
                         // Build corridor between first and last cell
-                        corridors.Add(new Corridor(ref dungeon, ref currentCell, ref lastCell, randomDirection, tileDimensions, floorMaterial, wallHeight, wallMaterial));
+                        corridors.Add(new Corridor(ref dungeon, ref currentCell, ref lastCell, randomDirection, tileDimensions, floorMaterial, wallHeight, wallMaterial, true));
                         corridorPlaced = true;
                         // Add the corridor to the dirty corridors list
                         dirtyCorridors.Add(corridors[corridors.Count - 1]);
@@ -488,7 +488,7 @@ public class DungeonGeneratorDiggerAgent : MonoBehaviour
                 // Set last cell
                 lastCell = ref dungeon.getDungeonGrid()[currentCell.getCellRowPositionInGrid() + (rowLengthMultiplier * length), currentCell.getCellColumnPositionInGrid() + (columnLengthMultiplier * length)];
                 // Build corridor between first and last cell
-                corridors.Add(new Corridor(ref dungeon, ref currentCell, ref lastCell, directionToDig, tileDimensions, floorMaterial, wallHeight, wallMaterial));
+                corridors.Add(new Corridor(ref dungeon, ref currentCell, ref lastCell, directionToDig, tileDimensions, floorMaterial, wallHeight, wallMaterial, true));
                 corridorPlaced = true;
                 // Add the corridor to the dirty corridors list
                 dirtyCorridors.Add(corridors[corridors.Count - 1]);
