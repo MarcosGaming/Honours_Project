@@ -240,58 +240,6 @@ public class DungeonGeneratorDiggerAgent : MonoBehaviour
             }
         }
 
-        // Method that will update the current cell to the next based on the direction the digger agent was going
-        private void UpdateCurrentCellToNextCell(ref Direction directionToRemoveWall)
-        {
-            switch (direction)
-            {
-                case Direction.Up:
-                    if (currentCell.getCellRowPositionInGrid() - 1 >= 0)
-                    {
-                        currentCell = dungeon.getDungeonGrid()[currentCell.getCellRowPositionInGrid() - 1, currentCell.getCellColumnPositionInGrid()];
-                        directionToRemoveWall = Direction.Down;
-                    }
-                    break;
-                case Direction.Down:
-                    if (currentCell.getCellRowPositionInGrid() + 1 <= dungeon.getDungeonHeight() - 1)
-                    {
-                        currentCell = dungeon.getDungeonGrid()[currentCell.getCellRowPositionInGrid() + 1, currentCell.getCellColumnPositionInGrid()];
-                        directionToRemoveWall = Direction.Up;
-                    }
-                    break;
-                case Direction.Left:
-                    if (currentCell.getCellColumnPositionInGrid() - 1 >= 0)
-                    {
-                        currentCell = dungeon.getDungeonGrid()[currentCell.getCellRowPositionInGrid(), currentCell.getCellColumnPositionInGrid() - 1];
-                        directionToRemoveWall = Direction.Right;
-                    }
-                    break;
-                case Direction.Right:
-                    if (currentCell.getCellColumnPositionInGrid() + 1 <= dungeon.getDungeonWidth() - 1)
-                    {
-                        currentCell = dungeon.getDungeonGrid()[currentCell.getCellRowPositionInGrid(), currentCell.getCellColumnPositionInGrid() + 1];
-                        directionToRemoveWall = Direction.Left;
-                    }
-                    break;
-            }
-        }
-
-        // Method that will check that all the tiles needed to build the room with the random parameters are empty
-        private bool AllTilesAreEmpty(int topLeftCornerRow, int height, int topLeftCornerColumn, int width)
-        {
-            for (int i = topLeftCornerRow; i < (topLeftCornerRow + height); i++)
-            {
-                for (int j = topLeftCornerColumn; j < (topLeftCornerColumn + width); j++)
-                {
-                    if (dungeon.getDungeonGrid()[i, j].getCellFloorTile() != null)
-                    {
-                        return false;
-                    }
-                }
-            }
-            return true;
-        }
-
         // Method that will try to build a corridor from of the outer tiles of the last room placed
         private void TryToBuildCorridorFromRoom(Vector3 tileDimensions, Material floorMaterial, float wallHeight, Material wallMaterial)
         {
@@ -493,6 +441,58 @@ public class DungeonGeneratorDiggerAgent : MonoBehaviour
                 // There is no space for the digger to place a new corridor
                 corridorPlaced = false;
             }
+        }
+
+        // Method that will update the current cell to the next based on the direction the digger agent was going
+        private void UpdateCurrentCellToNextCell(ref Direction directionToRemoveWall)
+        {
+            switch (direction)
+            {
+                case Direction.Up:
+                    if (currentCell.getCellRowPositionInGrid() - 1 >= 0)
+                    {
+                        currentCell = dungeon.getDungeonGrid()[currentCell.getCellRowPositionInGrid() - 1, currentCell.getCellColumnPositionInGrid()];
+                        directionToRemoveWall = Direction.Down;
+                    }
+                    break;
+                case Direction.Down:
+                    if (currentCell.getCellRowPositionInGrid() + 1 <= dungeon.getDungeonHeight() - 1)
+                    {
+                        currentCell = dungeon.getDungeonGrid()[currentCell.getCellRowPositionInGrid() + 1, currentCell.getCellColumnPositionInGrid()];
+                        directionToRemoveWall = Direction.Up;
+                    }
+                    break;
+                case Direction.Left:
+                    if (currentCell.getCellColumnPositionInGrid() - 1 >= 0)
+                    {
+                        currentCell = dungeon.getDungeonGrid()[currentCell.getCellRowPositionInGrid(), currentCell.getCellColumnPositionInGrid() - 1];
+                        directionToRemoveWall = Direction.Right;
+                    }
+                    break;
+                case Direction.Right:
+                    if (currentCell.getCellColumnPositionInGrid() + 1 <= dungeon.getDungeonWidth() - 1)
+                    {
+                        currentCell = dungeon.getDungeonGrid()[currentCell.getCellRowPositionInGrid(), currentCell.getCellColumnPositionInGrid() + 1];
+                        directionToRemoveWall = Direction.Left;
+                    }
+                    break;
+            }
+        }
+
+        // Method that will check that all the tiles needed to build the room with the random parameters are empty
+        private bool AllTilesAreEmpty(int topLeftCornerRow, int height, int topLeftCornerColumn, int width)
+        {
+            for (int i = topLeftCornerRow; i < (topLeftCornerRow + height); i++)
+            {
+                for (int j = topLeftCornerColumn; j < (topLeftCornerColumn + width); j++)
+                {
+                    if (dungeon.getDungeonGrid()[i, j].getCellFloorTile() != null)
+                    {
+                        return false;
+                    }
+                }
+            }
+            return true;
         }
 
         // Method that will check the number of dungeon cell that are empty from the current upwards
