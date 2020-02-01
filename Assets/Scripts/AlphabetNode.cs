@@ -111,6 +111,7 @@ public class TaskNode : AlphabetNode
     }
 }
 
+// Node indicating a task that is connected to another task but that they are far away from each other
 public class FarTaskNode : AlphabetNode
 {
     public FarTaskNode()

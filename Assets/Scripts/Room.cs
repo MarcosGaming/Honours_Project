@@ -17,7 +17,7 @@ public class Room
     private int roomWidth;                      // Number of tile columns the room has
     private int roomHeight;                     // Number of tile rows the room has
 
-    public Room(ref Dungeon dungeon, int roomTopLeftCellRow, int roomTopLeftCellColumn, int roomHeight, int roomWidth, Vector3 floorTileDimensions, Material floorTileMaterial, float wallHeight, Material wallMaterial)
+    public Room(Dungeon dungeon, int roomTopLeftCellRow, int roomTopLeftCellColumn, int roomHeight, int roomWidth, Vector3 floorTileDimensions, Material floorTileMaterial, float wallHeight, Material wallMaterial)
     {
         // Create empty game object for the room
         room = new GameObject();
@@ -28,7 +28,7 @@ public class Room
         tilesLeftColumn = new List<FloorTile>();
         tilesRightColumn = new List<FloorTile>();
         // Get corner position of the room in the world to place the empty game object in the middle of where the room is going to be
-        ref DungeonCell[,] grid = ref dungeon.getDungeonGrid();
+        DungeonCell[,] grid = dungeon.getDungeonGrid();
         Vector3 corner = grid[roomTopLeftCellRow, roomTopLeftCellColumn].getCellWorldPosition() + new Vector3(-floorTileDimensions.x * 0.5f, 0.0f, floorTileDimensions.z * 0.5f);
         room.transform.position = corner + new Vector3(floorTileDimensions.x * (float)roomWidth * 0.5f, wallHeight * 0.5f, -floorTileDimensions.z * (float)roomHeight * 0.5f);
         // Set room properties
@@ -43,8 +43,8 @@ public class Room
             int tileColumnPos = 0;
             for (int j = roomTopLeftCellColumn; j < roomTopLeftCellColumn + roomWidth; j++)
             {
-                floorTiles[tileRowPos, tileColumnPos] = new FloorTile(ref grid[i,j] ,floorTileMaterial, floorTileDimensions, grid[i, j].getCellWorldPosition(), TileType.RoomInnerTile);
-                grid[i, j].setCellFloorTile(ref floorTiles[tileRowPos, tileColumnPos]); 
+                floorTiles[tileRowPos, tileColumnPos] = new FloorTile(grid[i,j] ,floorTileMaterial, floorTileDimensions, grid[i, j].getCellWorldPosition(), TileType.RoomInnerTile);
+                grid[i, j].setCellFloorTile(floorTiles[tileRowPos, tileColumnPos]); 
                 tileColumnPos++;
             }
             tileRowPos++;
@@ -102,29 +102,29 @@ public class Room
         return roomHeight;
     }
 
-    public ref FloorTile[,] getFloorTiles()
+    public FloorTile[,] getFloorTiles()
     {
-        return ref floorTiles;
+        return floorTiles;
     }
 
-    public ref List<FloorTile> getTilesUpRow()
+    public List<FloorTile> getTilesUpRow()
     {
-        return ref tilesUpRow;
+        return tilesUpRow;
     }
 
-    public ref List<FloorTile> getTilesDownRow()
+    public List<FloorTile> getTilesDownRow()
     {
-        return ref tilesDownRow;
+        return tilesDownRow;
     }
 
-    public ref List<FloorTile> getTilesLeftColumn()
+    public List<FloorTile> getTilesLeftColumn()
     {
-        return ref tilesLeftColumn;
+        return tilesLeftColumn;
     }
 
-    public ref List<FloorTile> getTilesRightColumn()
+    public List<FloorTile> getTilesRightColumn()
     {
-        return ref tilesRightColumn;
+        return tilesRightColumn;
     }
 }
 

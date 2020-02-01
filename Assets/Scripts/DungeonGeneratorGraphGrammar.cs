@@ -30,9 +30,6 @@ public class DungeonGeneratorGraphGrammar : MonoBehaviour
 
     private Dungeon dungeon;                                // Dungeon class which basically consits in a 2D array of cells
 
-    private List<Room> rooms;                               // List with all the rooms in the dungeon
-
-    private List<Corridor> corridors;                       // List with all the corridors in the dungeon
     private int minCorridorLengthWhenVertical;              // Minimum corridor length when it is placed vertically
     private int maxCorridorLengthWhenVertical;              // Maximum corridor length when it is placed vertically
     private int minCorridorLengthWhenHorizontal;            // Minimum corridor length when it is placed horizontally
@@ -41,9 +38,6 @@ public class DungeonGeneratorGraphGrammar : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        // Initialise rooms and corridors lists
-        rooms = new List<Room>();
-        corridors = new List<Corridor>();
         // Make sure that the wall height is at least one
         wallHeight = Mathf.Max(1.0f, wallHeight);
         // Make sure that the tile dimensions are at least 1,0.5,1
@@ -88,29 +82,21 @@ public class DungeonGeneratorGraphGrammar : MonoBehaviour
 
     private void TransformGraphIntoDungeon()
     {
-        // Create dungeon grid
+        // Calculate dungeon dimensions
         int dungeonHeight = graph.getNumberNodes() * roomMaxTilesHeight * maxCorridorLengthWhenVertical;
         int dungeonWidth = graph.getNumberNodes() * roomMaxTilesWidth * maxCorridorLengthWhenHorizontal;
         // Create dungeon grid
         dungeon = new Dungeon(dungeonHeight, dungeonWidth);
-        ref DungeonCell[,] dungeonGrid = ref dungeon.getDungeonGrid();
-        for (int i = 0; i < dungeonHeight; i++)
-        {
-            for (int j = 0; j < dungeonWidth; j++)
-            {
-                Vector3 cellPosition = dungeonTopLeftCellPosition + new Vector3(floorTileDimensions.x * j, floorTileDimensions.y, -floorTileDimensions.z * i);
-                dungeonGrid[i, j] = new DungeonCell(cellPosition, i, j);
-            }
-        }
-        // Place rooms in dungeon starting from the entrance (root node of the graph), given the productions rules, there can only be one level of rooms above the entrance
+        dungeon.createDungeonGrid(dungeonTopLeftCellPosition, floorTileDimensions);
+        // Place rooms in dungeon starting from the entrance (root node of the graph), given the productions rules, there can only be one level of rooms above the entrance and no rooms can be at its left
         int entranceTopLeftTileRow = roomMaxTilesHeight + maxCorridorLengthWhenVertical;
         int entranceTopLeftTileColumn = 0;
         int entranceRandomRoomHeight = Random.Range(roomMinTilesHeight, roomMaxTilesHeight);
         int entrnaceRandomRoomWidth = Random.Range(roomMinTilesWidth, roomMaxTilesWidth);
-        rooms.Add(new Room(ref dungeon, entranceTopLeftTileRow, entranceTopLeftTileColumn, entranceRandomRoomHeight, entrnaceRandomRoomWidth, floorTileDimensions, floorMaterial, wallHeight, wallMaterial));
+        dungeon.getDungeonRooms().Add(new Room(dungeon, entranceTopLeftTileRow, entranceTopLeftTileColumn, entranceRandomRoomHeight, entrnaceRandomRoomWidth, floorTileDimensions, floorMaterial, wallHeight, wallMaterial));
         // Create a list with the nodes which room has already been placed
         Dictionary<AlphabetNode, Room> nodesWithRoom = new Dictionary<AlphabetNode, Room>();
-        nodesWithRoom.Add(graph.getRootNode(), rooms[0]);
+        nodesWithRoom.Add(graph.getRootNode(), dungeon.getDungeonRooms()[0]);
         // Create a list with the far task nodes connected
         List<AlphabetNode> farTaskNodesConnected = new List<AlphabetNode>();
         // Create a list with the nodes that need to be visited
@@ -122,7 +108,7 @@ public class DungeonGeneratorGraphGrammar : MonoBehaviour
             AlphabetNode currentNode = nodesToVisit[0];
             bool checkUp = true;
             bool checkDown = true;
-            // When the node is a far task node, a room is not created only the connection
+            // When the node is a far task node, a room is not created, only the connection
             if(currentNode is FarTaskNode && !farTaskNodesConnected.Contains(currentNode))
             {
                 // Find in which direction is the other far task node connected to this one, given the production rules, far task nodes are only connected down or up
@@ -213,12 +199,12 @@ public class DungeonGeneratorGraphGrammar : MonoBehaviour
                 break;
         }
         // Create room
-        rooms.Add(new Room(ref dungeon, topLeftCornerRow, topLeftCornerColumn, randomRoomHeight, randomRoomWidth, floorTileDimensions, floorMaterial, wallHeight, wallMaterial));
+        dungeon.getDungeonRooms().Add(new Room(dungeon, topLeftCornerRow, topLeftCornerColumn, randomRoomHeight, randomRoomWidth, floorTileDimensions, floorMaterial, wallHeight, wallMaterial));
         // Add node to lists
-        nodesWithRoom.Add(currentNode.getConnection(dir), rooms[rooms.Count - 1]);
+        nodesWithRoom.Add(currentNode.getConnection(dir), dungeon.getDungeonRooms()[dungeon.getDungeonRooms().Count - 1]);
         nodesToVisit.Add(currentNode.getConnection(dir));
         // Connect rooms
-        corridors.Add(new Corridor(ref dungeon, nodesWithRoom[currentNode], nodesWithRoom[currentNode.getConnection(dir)], floorTileDimensions, floorMaterial, wallHeight, wallMaterial));
+        dungeon.getDungeonCorridors().Add(new Corridor(dungeon, nodesWithRoom[currentNode], nodesWithRoom[currentNode.getConnection(dir)], floorTileDimensions, floorMaterial, wallHeight, wallMaterial));
     }
 
     private void ConnectFarTaskNodesRooms(Room upperRoom, Room lowerRoom)
@@ -232,7 +218,7 @@ public class DungeonGeneratorGraphGrammar : MonoBehaviour
         // Check if both cells are aligned
         if (firstCell.getCellColumnPositionInGrid() == lastCell.getCellColumnPositionInGrid())
         {
-            corridors.Add(new Corridor(ref dungeon, ref firstCell, ref lastCell, Direction.Down, floorTileDimensions, floorMaterial, wallHeight, wallMaterial, false));
+            dungeon.getDungeonCorridors().Add(new Corridor(dungeon, firstCell, lastCell, Direction.Down, floorTileDimensions, floorMaterial, wallHeight, wallMaterial, false));
         }
         else
         {
@@ -248,147 +234,9 @@ public class DungeonGeneratorGraphGrammar : MonoBehaviour
                 middleDirection = Direction.Left;
             }
             // Create corridors
-            corridors.Add(new Corridor(ref dungeon, ref firstCell, ref firstMiddleCell, Direction.Down, floorTileDimensions, floorMaterial, wallHeight, wallMaterial, true));
-            corridors.Add(new Corridor(ref dungeon, ref firstMiddleCell, ref secondMiddleCell, middleDirection, floorTileDimensions, floorMaterial, wallHeight, wallMaterial, true));
-            corridors.Add(new Corridor(ref dungeon, ref secondMiddleCell, ref lastCell, Direction.Down, floorTileDimensions, floorMaterial, wallHeight, wallMaterial, false));
-        }
-    }
-}
-
-public class Graph
-{ 
-    private AlphabetNode rootNode;      // The root node is going to be the start or entrance node
-    private int totalNodes;             // Number of nodes in the graph
-
-    public Graph(StartNode startNode)
-    {
-        rootNode = startNode;
-    }
-
-    public void setRootNode(AlphabetNode node)
-    {
-        this.rootNode = node;
-    }
-
-    public AlphabetNode getRootNode()
-    {
-        return rootNode;
-    }
-
-    public int getNumberNodes()
-    {
-        return totalNodes;
-    }
-
-    // Method that will create the different nodes in the graphs and will organize them using the production rules
-    public void GenerateMission(int minTaskNumber, int maxTaskNumber, int minOrganizeTaskTries, int maxOrganizeTaskTries, float probabiltyApplyOrganizationRule)
-    {
-        // Randomly choose the number task nodes
-        int numberTaskNodes = Random.Range(minTaskNumber, maxTaskNumber);
-        // Set the number of total nodes in the graph based on the number of task nodes plus the entance and goal nodes
-        totalNodes = numberTaskNodes + 2;
-        // Randomly choose the number of times the algorithm will try to apply the reorganize tasks production rules
-        int numberOrganizeTaskTries = Random.Range(minOrganizeTaskTries, maxOrganizeTaskTries);
-        // The graph always start with the start mission production rule
-        ProductionRules.StartMission((StartNode)rootNode, this);
-        // The first node to the right of the root of the graph is going to be always a task node
-        TaskNode currentTaskNode = (TaskNode)rootNode.getConnection(Direction.Right);
-        // The node to the right of the first task node is going to be always the goal node
-        GoalNode goalNode = (GoalNode)currentTaskNode.getConnection(Direction.Right);
-        // The first step to create the mission is to add all the tasks one by one
-        for (int i = 0; i < numberTaskNodes; i++)
-        {
-            ProductionRules.AddTask(currentTaskNode, goalNode);
-            currentTaskNode = (TaskNode)goalNode.getConnection(Direction.Left);
-        }
-        // The next and final step is to reorganize the tasks position starting from the right of the root node, at this stage the root is always going to be an entrance node and no rules can be applied to it
-        AlphabetNode currentNode = rootNode.getConnection(Direction.Right);
-        while (numberOrganizeTaskTries > 0)
-        {
-            // Decide whether to try apply rule from current node or go to the next one
-            if(currentNode is TaskNode && !currentNode.isTerminal() && Random.Range(0.0f, 1.0f) < probabiltyApplyOrganizationRule)
-            {
-                // Get number of nodes from the current that are also non terminal task nodes towards the right
-                AlphabetNode nextRightNode = currentNode.getConnection(Direction.Right);
-                List<AlphabetNode> connections = new List<AlphabetNode>();
-                // The biggest number of task nodes taken by a production rule is six
-                for (int i = 0; i < 6; i++)
-                {
-                    if(nextRightNode != null && nextRightNode is TaskNode && !nextRightNode.isTerminal())
-                    {
-                        connections.Add(nextRightNode);
-                        nextRightNode = nextRightNode.getConnection(Direction.Right);
-                    }
-                }
-                // Apply production rules based on the number of right task connections from current node, when multiple rules can be applied, all of them have the same probability of being picked
-                switch(connections.Count)
-                {
-                    case 2:
-                        // Only one rule can be applied
-                        ProductionRules.ReorganizeThreeTasks((TaskNode)currentNode, (TaskNode)connections[0], (TaskNode)connections[1]);
-                        break;
-                    case 3:
-                        // Two rules can be applied
-                        if(Random.Range(0.0f, 1.0f) > 0.5f)
-                        {
-                            ProductionRules.ReorganizeThreeTasks((TaskNode)currentNode, (TaskNode)connections[0], (TaskNode)connections[1]);
-                        }
-                        else
-                        {
-                            ProductionRules.ReorganizeFourTasks((TaskNode)currentNode, (TaskNode)connections[0], (TaskNode)connections[1], (TaskNode)connections[2]);
-                        }
-                        break;
-                    case 4:
-                        // Three rules can be applied
-                        float random = Random.Range(0.0f, 1.0f);
-                        if (random < (1.0f/3.0f))
-                        {
-                            ProductionRules.ReorganizeThreeTasks((TaskNode)currentNode, (TaskNode)connections[0], (TaskNode)connections[1]);
-                        }
-                        else if(random > (2.0f/3.0f))
-                        {
-                            ProductionRules.ReorganizeFourTasks((TaskNode)currentNode, (TaskNode)connections[0], (TaskNode)connections[1], (TaskNode)connections[2]);
-                        }
-                        else
-                        {
-                            ProductionRules.ReorganizeFiveTasks((TaskNode)currentNode, (TaskNode)connections[0], (TaskNode)connections[1], (TaskNode)connections[2], (TaskNode)connections[3]);
-                        }
-                        break;
-                    case 5:
-                        // Four rules can be applied
-                        random = Random.Range(0.0f, 1.0f);
-                        if (random < 0.25f)
-                        {
-                            ProductionRules.ReorganizeThreeTasks((TaskNode)currentNode, (TaskNode)connections[0], (TaskNode)connections[1]);
-                        }
-                        else if (random > 0.25f && random < 0.5f)
-                        {
-                            ProductionRules.ReorganizeFourTasks((TaskNode)currentNode, (TaskNode)connections[0], (TaskNode)connections[1], (TaskNode)connections[2]);
-                        }
-                        else if( random > 0.75f)
-                        {
-                            ProductionRules.ReorganizeFiveTasks((TaskNode)currentNode, (TaskNode)connections[0], (TaskNode)connections[1], (TaskNode)connections[2], (TaskNode)connections[3]);
-                        }
-                        else
-                        {
-                            ProductionRules.ReorganizeSixTasks((TaskNode)currentNode, (TaskNode)connections[0], (TaskNode)connections[1], (TaskNode)connections[2], (TaskNode)connections[3], (TaskNode)connections[4]);
-                        }
-                        break;
-                }
-            }
-            // Get next node, try right first and down second
-            AlphabetNode previousCurrent = currentNode;
-            currentNode = currentNode.getConnection(Direction.Right);
-            if(currentNode == null)
-            {
-                currentNode = previousCurrent.getConnection(Direction.Down);
-            }
-            if(currentNode is GoalNode || currentNode == null)
-            {
-                currentNode = rootNode;
-            }
-            // Decrease tries
-            numberOrganizeTaskTries--;
+            dungeon.getDungeonCorridors().Add(new Corridor(dungeon, firstCell, firstMiddleCell, Direction.Down, floorTileDimensions, floorMaterial, wallHeight, wallMaterial, true));
+            dungeon.getDungeonCorridors().Add(new Corridor(dungeon, firstMiddleCell, secondMiddleCell, middleDirection, floorTileDimensions, floorMaterial, wallHeight, wallMaterial, true));
+            dungeon.getDungeonCorridors().Add(new Corridor(dungeon, secondMiddleCell, lastCell, Direction.Down, floorTileDimensions, floorMaterial, wallHeight, wallMaterial, false));
         }
     }
 }

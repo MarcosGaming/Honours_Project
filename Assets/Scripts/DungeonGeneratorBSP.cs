@@ -28,14 +28,9 @@ public class DungeonGeneratorBSP : MonoBehaviour
 
     private BSPTree dungeonTree;                            // Binary Space Partitioning tree that represents the dungeon
 
-    private List<Corridor> corridors;                       // List of the corridors
-
-
     // Start is called before the first frame update
     void Start()
     {
-        // Initialise corridors list
-        corridors = new List<Corridor>();
         // Make sure that the wall height is at least one
         wallHeight = Mathf.Max(1.0f, wallHeight);
         // Make sure that the tile dimensions are at least 1,0.5,1
@@ -70,26 +65,18 @@ public class DungeonGeneratorBSP : MonoBehaviour
     {
         // Create dungeon grid
         dungeon = new Dungeon(dungeonWidth, dungeonHeight);
-        ref DungeonCell[,] dungeonGrid = ref dungeon.getDungeonGrid();
-        for (int i = 0; i < dungeonHeight; i++)
-        {
-            for (int j = 0; j < dungeonWidth; j++)
-            {
-                Vector3 cellPosition = dungeonTopLeftCellPosition + new Vector3(floorTileDimensions.x * j, floorTileDimensions.y, -floorTileDimensions.z * i);
-                dungeonGrid[i, j] = new DungeonCell(cellPosition, i, j);
-            }
-        }
+        dungeon.createDungeonGrid(dungeonTopLeftCellPosition, floorTileDimensions);
         // Create the root node of the tree
-        dungeonTree = new BSPTree(new BSPNode(null, ref dungeonGrid[0,0], dungeonWidth, dungeonHeight));
-        ref BSPNode root = ref dungeonTree.getRootNode();
+        dungeonTree = new BSPTree(new BSPNode(null, dungeon.getDungeonGrid()[0,0], dungeonWidth, dungeonHeight));
+        BSPNode root = dungeonTree.getRootNode();
         // Iteratively create partitions
-        CreatePartition(ref root);
+        CreatePartition(root);
         // Once all partitions and rooms within those partitions are created, starting from the deepest nodes, connect rooms from nodes corresponding to children from the same parent
-        ConnectRooms(ref dungeonTree.getRootNode().getLeftChildNode(), ref dungeonTree.getRootNode().getRightChildNode());
+        ConnectRooms(dungeonTree.getRootNode().getLeftChildNode(), dungeonTree.getRootNode().getRightChildNode());
     }
 
     // Every partition is going to create two new nodes
-    private void CreatePartition(ref BSPNode parent)
+    private void CreatePartition(BSPNode parent)
     {
         // Get row and column of the top left cell of the partition
         int firstRow = parent.getPartitionTopLeftCell().getCellRowPositionInGrid();
@@ -138,90 +125,90 @@ public class DungeonGeneratorBSP : MonoBehaviour
             heightNewPartition2 = (firstRow + parent.getPartitionHeight() - 1) - randomCellRow + 1;
         }
         // Create new nodes with the partitions data
-        parent.setLeftChildNode(new BSPNode(parent, ref dungeon.getDungeonGrid()[topLeftCellNewPartition1Row, topLeftCellNewPartition1Column], widthNewPartition1, heightNewPartition1));
-        parent.setRightChildNode(new BSPNode(parent, ref dungeon.getDungeonGrid()[topLeftCellNewPartition2Row, topLeftCellNewPartition2Column], widthNewPartition2, heightNewPartition2));
+        parent.setLeftChildNode(new BSPNode(parent, dungeon.getDungeonGrid()[topLeftCellNewPartition1Row, topLeftCellNewPartition1Column], widthNewPartition1, heightNewPartition1));
+        parent.setRightChildNode(new BSPNode(parent, dungeon.getDungeonGrid()[topLeftCellNewPartition2Row, topLeftCellNewPartition2Column], widthNewPartition2, heightNewPartition2));
 
         // Check if the left child can be further subdivided
-        ref BSPNode leftChild = ref parent.getLeftChildNode();
+        BSPNode leftChild = parent.getLeftChildNode();
         // Partition can only be subdivided if there is enough space for two sub partitions
         if (leftChild.getPartitionWidth() > (minPartitionWidth * 2.0f) && leftChild.getPartitionHeight() > (minPartitionHeight * 2.0f))
          {
-             CreatePartition(ref leftChild);
+             CreatePartition(leftChild);
          }
          // If the left child cannot be further subidivided create a room within its boundaries
          else
          {
-            leftChild.createPartitionRoom(ref dungeon, roomMinTilesWidth, roomMaxTilesWidth, roomMinTilesHeight, roomMaxTilesHeight, floorTileDimensions, floorMaterial, wallHeight, wallMaterial);
+            leftChild.createPartitionRoom(dungeon, roomMinTilesWidth, roomMaxTilesWidth, roomMinTilesHeight, roomMaxTilesHeight, floorTileDimensions, floorMaterial, wallHeight, wallMaterial);
          }
         // Check if the right child can be further subdivided
-        ref BSPNode rightChild = ref parent.getRightChildNode();
+        BSPNode rightChild = parent.getRightChildNode();
         // Partition can only be subdivided if there is enough space for two sub partitions
         if (rightChild.getPartitionWidth() > (minPartitionWidth * 2.0f) && rightChild.getPartitionHeight() > (minPartitionHeight * 2.0f))
         {
-            CreatePartition(ref rightChild);
+            CreatePartition(rightChild);
         }
         // If the right child cannot be further subidivided create a room within its boundaries
         else
         {
-            rightChild.createPartitionRoom(ref dungeon, roomMinTilesWidth, roomMaxTilesWidth, roomMinTilesHeight, roomMaxTilesHeight, floorTileDimensions, floorMaterial, wallHeight, wallMaterial);
+            rightChild.createPartitionRoom(dungeon, roomMinTilesWidth, roomMaxTilesWidth, roomMinTilesHeight, roomMaxTilesHeight, floorTileDimensions, floorMaterial, wallHeight, wallMaterial);
         }
     }
 
     // Recursive function that will crate corridors between nodes that have a room
-    private void ConnectRooms(ref BSPNode left, ref BSPNode right)
+    private void ConnectRooms(BSPNode left, BSPNode right)
     {
         // Check if left node has children that need to be connected first
         if(left.hasChildren())
         {
-            ConnectRooms(ref left.getLeftChildNode(), ref left.getRightChildNode());
+            ConnectRooms(left.getLeftChildNode(), left.getRightChildNode());
         }
         // Check if right node has children that need to be connected first
         if(right.hasChildren())
         {
-            ConnectRooms(ref right.getLeftChildNode(), ref right.getRightChildNode());
+            ConnectRooms(right.getLeftChildNode(), right.getRightChildNode());
         }
         // Check which nodes have rooms
         if(left.getPartitionRoom() != null && right.getPartitionRoom() != null)
         {
-            corridors.Add(new Corridor(ref dungeon, ref left.getPartitionRoom(), ref right.getPartitionRoom(), floorTileDimensions, floorMaterial, wallHeight, wallMaterial));
+            dungeon.getDungeonCorridors().Add(new Corridor(dungeon, left.getPartitionRoom(), right.getPartitionRoom(), floorTileDimensions, floorMaterial, wallHeight, wallMaterial));
         }
         else if(left.getPartitionRoom() != null && right.getPartitionRoom() == null)
         {
             // Find a room in one of the right node children
-            ref BSPNode nodeWithRoom = ref findChildWithRoom(ref right);
-            corridors.Add(new Corridor(ref dungeon, ref left.getPartitionRoom(), ref nodeWithRoom.getPartitionRoom(), floorTileDimensions, floorMaterial, wallHeight, wallMaterial));
+            BSPNode nodeWithRoom = findChildWithRoom(right);
+            dungeon.getDungeonCorridors().Add(new Corridor(dungeon, left.getPartitionRoom(), nodeWithRoom.getPartitionRoom(), floorTileDimensions, floorMaterial, wallHeight, wallMaterial));
         }
         else if(left.getPartitionRoom() == null && right.getPartitionRoom() != null)
         {
             // Find a room in one of the left node children
-            ref BSPNode nodeWithRoom = ref findChildWithRoom(ref left);
-            corridors.Add(new Corridor(ref dungeon, ref nodeWithRoom.getPartitionRoom(), ref right.getPartitionRoom(), floorTileDimensions, floorMaterial, wallHeight, wallMaterial));
+            BSPNode nodeWithRoom = findChildWithRoom(left);
+            dungeon.getDungeonCorridors().Add(new Corridor(dungeon, nodeWithRoom.getPartitionRoom(), right.getPartitionRoom(), floorTileDimensions, floorMaterial, wallHeight, wallMaterial));
         }
         else
         {
             // Find a room in one of the left and right children
-            ref BSPNode nodeWithRoomLeft = ref findChildWithRoom(ref left);
-            ref BSPNode nodeWithRoomRight = ref findChildWithRoom(ref right);
-            corridors.Add(new Corridor(ref dungeon, ref nodeWithRoomLeft.getPartitionRoom(), ref nodeWithRoomRight.getPartitionRoom(), floorTileDimensions, floorMaterial, wallHeight, wallMaterial));
+            BSPNode nodeWithRoomLeft = findChildWithRoom(left);
+            BSPNode nodeWithRoomRight = findChildWithRoom(right);
+            dungeon.getDungeonCorridors().Add(new Corridor(dungeon, nodeWithRoomLeft.getPartitionRoom(), nodeWithRoomRight.getPartitionRoom(), floorTileDimensions, floorMaterial, wallHeight, wallMaterial));
         }
     }
 
     // Recursive function to find a child node with a room
-    private ref BSPNode findChildWithRoom(ref BSPNode node)
+    private BSPNode findChildWithRoom(BSPNode node)
     {
         if(node.hasChildren())
         {
             // Randomly select child
             if(Random.Range(0.0f, 1.0f) > 0.5f)
             {
-                return ref findChildWithRoom(ref node.getLeftChildNode());
+                return findChildWithRoom(node.getLeftChildNode());
             }
             else
             {
-                return ref findChildWithRoom(ref node.getRightChildNode());
+                return findChildWithRoom(node.getRightChildNode());
             }
         }
-        return ref node;
+        return node;
     }
 
     // Node of the BSP tree
@@ -238,7 +225,7 @@ public class DungeonGeneratorBSP : MonoBehaviour
         private BSPNode rightChild;
         private BSPNode leftChild;
 
-        public BSPNode(BSPNode parent, ref DungeonCell topLeftCell, int width, int height)
+        public BSPNode(BSPNode parent, DungeonCell topLeftCell, int width, int height)
         {
             this.parent = parent;
             this.topLeftCell = topLeftCell;
@@ -246,14 +233,14 @@ public class DungeonGeneratorBSP : MonoBehaviour
             this.height = height;
         }
 
-        public ref BSPNode getParent()
+        public BSPNode getParent()
         {
-            return ref parent;
+            return parent;
         }
 
-        public ref DungeonCell getPartitionTopLeftCell()
+        public DungeonCell getPartitionTopLeftCell()
         {
-            return ref topLeftCell;
+            return topLeftCell;
         }
 
         public int getPartitionWidth()
@@ -266,9 +253,9 @@ public class DungeonGeneratorBSP : MonoBehaviour
             return height;
         }
 
-        public ref Room getPartitionRoom()
+        public Room getPartitionRoom()
         {
-            return ref room;
+            return room;
         }
 
         private void setPartitionRoom(Room room)
@@ -276,9 +263,9 @@ public class DungeonGeneratorBSP : MonoBehaviour
             this.room = room;
         }
 
-        public ref BSPNode getRightChildNode()
+        public BSPNode getRightChildNode()
         {
-            return ref rightChild;
+            return rightChild;
         }
 
         public void setRightChildNode(BSPNode node)
@@ -286,9 +273,9 @@ public class DungeonGeneratorBSP : MonoBehaviour
             this.rightChild = node;
         }
 
-        public ref BSPNode getLeftChildNode()
+        public BSPNode getLeftChildNode()
         {
-            return ref leftChild;
+            return leftChild;
         }
 
         public void setLeftChildNode(BSPNode node)
@@ -305,7 +292,7 @@ public class DungeonGeneratorBSP : MonoBehaviour
             return true;
         }
 
-        public void createPartitionRoom(ref Dungeon dungeon, int roomMinTilesWidth, int roomMaxTilesWidth, int roomMinTilesHeight, int roomMaxTilesHeight, Vector3 floorTileDimensions, Material floorMaterial, float wallHeight, Material wallMaterial)
+        public void createPartitionRoom(Dungeon dungeon, int roomMinTilesWidth, int roomMaxTilesWidth, int roomMinTilesHeight, int roomMaxTilesHeight, Vector3 floorTileDimensions, Material floorMaterial, float wallHeight, Material wallMaterial)
         {
             // Get min and max values for the top left cell row and column for the room, taking into account the min room dimensions and that one row and one column are used as margins
             int minRow = this.topLeftCell.getCellRowPositionInGrid() + 1;
@@ -324,7 +311,7 @@ public class DungeonGeneratorBSP : MonoBehaviour
             maxHeight = Mathf.Min(maxHeight, roomMaxTilesHeight);
             int randomHeight = Random.Range(roomMinTilesHeight, maxHeight + 1);
             // Create room
-            this.setPartitionRoom(new Room(ref dungeon, randomRow, randomColumn, randomHeight, randomWidth, floorTileDimensions, floorMaterial, wallHeight, wallMaterial));
+            this.setPartitionRoom(new Room(dungeon, randomRow, randomColumn, randomHeight, randomWidth, floorTileDimensions, floorMaterial, wallHeight, wallMaterial));
         }
     }
 
@@ -338,9 +325,9 @@ public class DungeonGeneratorBSP : MonoBehaviour
             this.rootNode = rootNode;
         }
 
-        public ref BSPNode getRootNode()
+        public BSPNode getRootNode()
         {
-            return ref rootNode;
+            return rootNode;
         }
     }
 }

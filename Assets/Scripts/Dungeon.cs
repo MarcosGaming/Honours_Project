@@ -6,20 +6,35 @@ public enum Direction { Up, Down, Right, Left, Unknown};
 
 public class Dungeon
 {
-    private DungeonCell[,] dungeonGrid; // 2D grid that represents the dungeon
-    private int dungeonWidth;           // Number of columns in the grid
-    private int dungeonHeight;          // Number of rows in the grid
+    private int dungeonWidth;                   // Number of columns in the grid
+    private int dungeonHeight;                  // Number of rows in the grid
+    private DungeonCell[,] dungeonGrid;         // 2D grid that represents the dungeon
+    private List<Room> dungeonRooms;            // List with all the rooms in the dungeon
+    private List<Corridor> dungeonCorridors;    // List with all the corridors in the dungeon
 
     public Dungeon(int dungeonWidth, int dungeonHeight)
     {
         this.dungeonWidth = dungeonWidth;
         this.dungeonHeight = dungeonHeight;
         dungeonGrid = new DungeonCell[this.dungeonHeight, this.dungeonWidth];
+        dungeonRooms = new List<Room>();
+        dungeonCorridors = new List<Corridor>();
+
     }
 
-    public ref DungeonCell[,] getDungeonGrid()
+    public int getDungeonWidth()
     {
-        return ref dungeonGrid;
+        return dungeonWidth;
+    }
+
+    public int getDungeonHeight()
+    {
+        return dungeonHeight;
+    }
+
+    public DungeonCell[,] getDungeonGrid()
+    {
+        return dungeonGrid;
     }
 
     public void createDungeonGrid(Vector3 dungeonTopLeftCellPosition, Vector3 floorTileDimensions)
@@ -34,14 +49,14 @@ public class Dungeon
         }
     }
 
-    public int getDungeonWidth()
+    public List<Room> getDungeonRooms()
     {
-        return dungeonWidth;
+        return dungeonRooms;
     }
 
-    public int getDungeonHeight()
+    public List<Corridor> getDungeonCorridors()
     {
-        return dungeonHeight;
+        return dungeonCorridors;
     }
 }
 
@@ -74,14 +89,14 @@ public class DungeonCell
         return columnPositionInGrid;
     }
 
-    public void setCellFloorTile(ref FloorTile floorTile)
+    public void setCellFloorTile(FloorTile floorTile)
     {
         this.floorTile = floorTile;
     }
 
-    public ref FloorTile getCellFloorTile()
+    public FloorTile getCellFloorTile()
     {
-        return ref floorTile;
+        return floorTile;
     }
 
     public void removeFloorTile()

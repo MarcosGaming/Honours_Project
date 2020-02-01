@@ -14,16 +14,16 @@ public class FloorTile
     private DungeonCell dungeonCell;    // Dungeon cell where the floor tile is
     private TileType tileType;          // The type of floor tile
 
-    public FloorTile(ref DungeonCell cell, Material material, Vector3 dimensions, Vector3 position, TileType tileType)
+    public FloorTile(DungeonCell cell, Material material, Vector3 dimensions, Vector3 position, TileType tileType)
     {
         // Create primitive will attach to the game object a collider, a mesh filter and a mesh renderer
-        this.dungeonCell = cell;
         tile = GameObject.CreatePrimitive(PrimitiveType.Cube);
-        tile.name = "FloorTile";
+        this.dungeonCell = cell;
         tile.GetComponent<MeshRenderer>().material = material;
         tile.transform.localScale = dimensions;
         tile.transform.position = new Vector3(0.0f, dimensions.y * 0.5f, 0.0f) + position;
         this.tileType = tileType;
+        tile.name = "FloorTile";
     }
     public void setParent(GameObject parent, bool worldPositionStays)
     {
@@ -37,9 +37,10 @@ public class FloorTile
         {
             return;
         }
+        // Create wall primitive and assign a material to it
         GameObject wall = GameObject.CreatePrimitive(PrimitiveType.Cube);
         wall.GetComponent<MeshRenderer>().material = material;
-        // Set the scale based on which direction the wall will be moved
+        // Set the scale based on which direction the wall will be moved, value of 0.01f is used to make the wall thin so it can be placed above the tile itself
         if (direction == Direction.Up || direction == Direction.Down)
         {
             wall.transform.localScale = new Vector3(tile.transform.localScale.x, wallHeight, 0.01f);
@@ -51,37 +52,33 @@ public class FloorTile
         // Set the position based on the direction
         Vector3 position = tile.transform.position;
         position.y = wallHeight * 0.5f + tile.transform.localScale.y * 2.0f;
+        // Calculate wall position and assign the new wall to the corresponding wall property
         switch (direction)
         {
             case Direction.Up:
                 position.z += tile.transform.localScale.z * 0.5f - wall.transform.localScale.z * 0.5f;
-                wall.transform.position = position;
-                wall.transform.SetParent(tile.transform);
                 wall.name = "UpperWall";
                 UpperWall = wall;
                 break;
             case Direction.Down:
                 position.z -= tile.transform.localScale.z * 0.5f - wall.transform.localScale.z * 0.5f;
-                wall.transform.position = position;
-                wall.transform.SetParent(tile.transform);
                 wall.name = "DownWall";
                 DownWall = wall;
                 break;
             case Direction.Right:
                 position.x += tile.transform.localScale.x * 0.5f - wall.transform.localScale.x * 0.5f;
-                wall.transform.position = position;
-                wall.transform.SetParent(tile.transform);
                 wall.name = "RightWall";
                 RightWall = wall;
                 break;
             case Direction.Left:
                 position.x -= tile.transform.localScale.x * 0.5f - wall.transform.localScale.x * 0.5f;
-                wall.transform.position = position;
-                wall.transform.SetParent(tile.transform);
                 wall.name = "LeftWall";
                 LeftWall = wall;
                 break;
         }
+        // Set wall position, as walls are game objects (class type) they are references, so a change in the original wall object will also change the corresponding wall property
+        wall.transform.position = position;
+        wall.transform.SetParent(tile.transform);
     }
 
     public void removeWall(Direction direction)
@@ -129,9 +126,9 @@ public class FloorTile
         Object.Destroy(tile);
     }
 
-    public ref DungeonCell getCorrespondingDungeonCell()
+    public DungeonCell getCorrespondingDungeonCell()
     {
-        return ref dungeonCell;
+        return dungeonCell;
     }
 
     public TileType getTileType()
