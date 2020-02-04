@@ -2,9 +2,12 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+public enum RoomType {startRoom, normalRoom, exitRoom};
+
 public class Room
 {
     private GameObject room;                    // Empty game object that represents a room
+    private RoomType roomType;                  // The type of the room
 
     private FloorTile[,] floorTiles;            // Grid of floor tiles
     private List<FloorTile> tilesUpRow;         // List of the floor tiles in the most up row of the room
