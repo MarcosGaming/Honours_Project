@@ -130,6 +130,7 @@ GameObject:
   m_Component:
   - component: {fileID: 128257227}
   - component: {fileID: 128257228}
+  - component: {fileID: 128257229}
   m_Layer: 0
   m_Name: GameManager
   m_TagString: Untagged
@@ -164,17 +165,33 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   dungeonTopLeftCellPosition: {x: 0, y: 0, z: 0}
-  dungeonWidth: 50
-  dungeonHeight: 50
   roomMinTilesWidth: 4
   roomMaxTilesWidth: 10
   roomMinTilesHeight: 4
   roomMaxTilesHeight: 10
-  roomAndPartitionBorderMargin: 2
   floorMaterial: {fileID: 2100000, guid: 6f3b764d69dc4d04d8e2ce516d2dfaa3, type: 2}
-  floorTileDimensions: {x: 2, y: 0.5, z: 2}
   wallMaterial: {fileID: 2100000, guid: 5f73475cf0cad364b9800b85c2a229fc, type: 2}
-  wallHeight: 3
+  floorTileDimensions: {x: 4, y: 0.5, z: 4}
+  wallHeight: 6
+  dungeonWidth: 50
+  dungeonHeight: 50
+  roomAndPartitionBorderMargin: 2
+--- !u!114 &128257229
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 128257226}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8d966d8772e1996499ab426cf77b16f1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  useBSP: 0
+  useDiggerAgent: 0
+  useGraphGrammars: 0
+  saveDungeonAsPrefab: 1
 --- !u!1 &705507993
 GameObject:
   m_ObjectHideFlags: 0
@@ -248,8 +265,7 @@ Light:
   m_BounceIntensity: 1
   m_ColorTemperature: 6570
   m_UseColorTemperature: 0
-  m_BoundingSphereOverride: {x: 2.3509887e-38, y: 3.4370224e+10, z: 7.7371252e+25,
-    w: 4.7019774e-38}
+  m_BoundingSphereOverride: {x: 0.03125, y: 0.09765625, z: 0.0234375, w: -0.02734375}
   m_UseBoundingSphereOverride: 0
   m_ShadowRadius: 0
   m_ShadowAngle: 0

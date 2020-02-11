@@ -130,6 +130,7 @@ GameObject:
   m_Component:
   - component: {fileID: 452264448}
   - component: {fileID: 452264449}
+  - component: {fileID: 452264450}
   m_Layer: 0
   m_Name: GameManager
   m_TagString: Untagged
@@ -164,19 +165,35 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   dungeonTopLeftCellPosition: {x: 0, y: 0, z: 0}
-  dungeonWidth: 50
-  dungeonHeight: 50
   roomMinTilesWidth: 4
   roomMaxTilesWidth: 10
   roomMinTilesHeight: 4
   roomMaxTilesHeight: 10
+  floorMaterial: {fileID: 2100000, guid: 6f3b764d69dc4d04d8e2ce516d2dfaa3, type: 2}
+  wallMaterial: {fileID: 2100000, guid: 417d3ef38761e434d91ee72bf63b5b44, type: 2}
+  floorTileDimensions: {x: 2, y: 0.5, z: 2}
+  wallHeight: 3
+  saveDungeonAsPrefab: 1
+  dungeonWidth: 50
+  dungeonHeight: 50
   corridorMinTilesLength: 4
   corridorMaxTilesLength: 8
-  floorMaterial: {fileID: 2100000, guid: 6f3b764d69dc4d04d8e2ce516d2dfaa3, type: 2}
-  floorTileDimensions: {x: 2, y: 0.5, z: 2}
-  wallMaterial: {fileID: 2100000, guid: 417d3ef38761e434d91ee72bf63b5b44, type: 2}
-  wallHeight: 3
   removeDirtyCorridors: 1
+--- !u!114 &452264450
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 452264447}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8d966d8772e1996499ab426cf77b16f1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  useBSP: 0
+  useDiggerAgent: 0
+  useGraphGrammars: 0
 --- !u!1 &1931331459
 GameObject:
   m_ObjectHideFlags: 0
