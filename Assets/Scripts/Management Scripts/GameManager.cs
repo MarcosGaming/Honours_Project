@@ -6,8 +6,8 @@ using UnityEngine.UI;
 public class GameManager : MonoBehaviour
 {
     [Header("Next scene to load")]
-    [SerializeField] Object scene;                  // The next scene to load
-    [SerializeField] List<Object> randomScenes;     // Scenes that will be loaded randomly
+    [SerializeField] string scene;                  // The next scene to load
+    [SerializeField] List<string> randomScenes;     // Scenes that will be loaded randomly
     [Header("Player object")]
     [SerializeField] GameObject player;             // Player
     [Header("Teleporter game objects")]
@@ -29,7 +29,7 @@ public class GameManager : MonoBehaviour
     private float timer;                            // Timer valie
 
     // Start is called before the first frame update
-    void Start()
+    void Awake()
     {
         // Disable cursor
         Cursor.visible = false;
@@ -76,20 +76,20 @@ public class GameManager : MonoBehaviour
         if(Input.GetKeyDown(KeyCode.Return) && showingUI)
         {
             // If there is no next scene to load, try getting one random scene from the scenes handles
-            if(scene == null)
+            if(scene == "")
             {
-                Object randomScene = scenesHandler.getRandomScene();
-                if(randomScene == null)
+                string randomScene = scenesHandler.getRandomScene();
+                if(randomScene == "")
                 {
                     Application.Quit();
                 }
                 // Load level
-                UnityEngine.SceneManagement.SceneManager.LoadScene(randomScene.name);
+                UnityEngine.SceneManagement.SceneManager.LoadScene(randomScene);
             }
             else
             {
                 // Load level
-                UnityEngine.SceneManagement.SceneManager.LoadScene(scene.name);
+                UnityEngine.SceneManagement.SceneManager.LoadScene(scene);
             }
         }
         // If escape is pressed, exit the application

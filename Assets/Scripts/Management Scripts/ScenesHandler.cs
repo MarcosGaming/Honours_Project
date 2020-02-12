@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class ScenesHandler
 {
-    private List<Object> scenes;            // Scenes to load
+    private List<string> scenes;            // Scenes to load
 
     private static ScenesHandler instance;  // Singleton instance
 
@@ -19,18 +19,18 @@ public class ScenesHandler
         return instance;
     }
 
-    public void setScenes(List<Object>scenes)
+    public void setScenes(List<string>scenes)
     {
         if(this.scenes == null)
         {
-            this.scenes = new List<Object>();
+            this.scenes = new List<string>();
             this.scenes = scenes.GetRange(0, scenes.Count);
         }
     }
     
-    public Object getRandomScene()
+    public string getRandomScene()
     {
-        Object randomScene = null;
+        string randomScene = "";
         if(scenes.Count > 0)
         {
             int random = Random.Range(0, scenes.Count);

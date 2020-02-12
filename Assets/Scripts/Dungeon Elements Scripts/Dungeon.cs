@@ -78,17 +78,19 @@ public class Dungeon
 
     public void saveDungeonAsPrefab()
     {
-        // Create folder to store dungeon prefabs if there is not one already
-        string folderPath = "Assets/DungeonPrefabs/";
-        if (!Directory.Exists(folderPath))
-        {
-            Directory.CreateDirectory(folderPath);
-        }
-        // Set path name
-        string localPath = folderPath + dungeonObject.name + ".prefab";
-        localPath = AssetDatabase.GenerateUniqueAssetPath(localPath);
-        // Store dungeon game object as a prefab
-        PrefabUtility.SaveAsPrefabAssetAndConnect(dungeonObject, localPath, InteractionMode.UserAction);
+        #if (UNITY_EDITOR)
+            // Create folder to store dungeon prefabs if there is not one already
+            string folderPath = "Assets/DungeonPrefabs/";
+            if (!Directory.Exists(folderPath))
+            {
+                Directory.CreateDirectory(folderPath);
+            }
+            // Set path name
+            string localPath = folderPath + dungeonObject.name + ".prefab";
+            localPath = AssetDatabase.GenerateUniqueAssetPath(localPath);
+            // Store dungeon game object as a prefab
+            PrefabUtility.SaveAsPrefabAssetAndConnect(dungeonObject, localPath, InteractionMode.UserAction);
+        #endif
     }
 
     public void randomlyChooseEntranceRoomAndExitRoom()

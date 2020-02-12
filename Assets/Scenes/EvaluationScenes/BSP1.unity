@@ -3981,14 +3981,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 06c926770ab669d4cb6926b8f4895f29, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  scene: {fileID: 102900000, guid: 03bae693efc0fa24ea45a3c94f14b16b, type: 3}
+  scene: DIGGER1
   randomScenes:
-  - {fileID: 102900000, guid: 2d2b1a6436b6fc443a05afc63b93e2bc, type: 3}
-  - {fileID: 102900000, guid: 3c1f1b90cc3098141b141b075d433e9e, type: 3}
-  - {fileID: 102900000, guid: caa608904db569b46b9d65d589997835, type: 3}
-  - {fileID: 102900000, guid: 19b67539477413e4eb23f324cf71dc22, type: 3}
-  - {fileID: 102900000, guid: 13b24b5740a5c454aa4c1d3a2071099a, type: 3}
-  - {fileID: 102900000, guid: 6d1920170ff5dd54984c04ca6660576e, type: 3}
+  - DIGGER2
+  - DIGGER3
+  - GRAMMARS2
+  - GRAMMARS3
+  - BSP2
+  - BSP3
   player: {fileID: 1701534382}
   entranceTeleporter: {fileID: 100000, guid: 931a75669ffc1214f93c0d969895e8a1, type: 3}
   exitTeleporter: {fileID: 100000, guid: 9966aa3c008742041a74ffbeb93083cd, type: 3}

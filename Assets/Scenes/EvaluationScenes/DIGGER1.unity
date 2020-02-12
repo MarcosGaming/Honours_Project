@@ -3981,7 +3981,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 06c926770ab669d4cb6926b8f4895f29, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  scene: {fileID: 102900000, guid: 487bcecdc5c791c4f987b3bcd095e119, type: 3}
+  scene: GRAMMARS1
   randomScenes: []
   player: {fileID: 1701534382}
   entranceTeleporter: {fileID: 100000, guid: 931a75669ffc1214f93c0d969895e8a1, type: 3}

@@ -65,7 +65,9 @@ public class DungeonManager : MonoBehaviour
         else if (Input.GetKeyDown(keyToSaveTheGeneratedDungeonAsPrefab))
         {
             SaveCurrentDungeonAsPrefab();
-            UnityEditor.EditorApplication.isPlaying = false;
+            #if (UNITY_EDITOR)
+                UnityEditor.EditorApplication.isPlaying = false;
+            #endif
         }
     }
 
