@@ -31,6 +31,8 @@ public class GameManager : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
+        // Disable cursor
+        Cursor.visible = false;
         // Set timer to 0
         timer = 0.0f;
         // Set showing UI to false and disable canvas so the player can't see it
