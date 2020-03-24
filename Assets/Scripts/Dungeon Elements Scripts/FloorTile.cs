@@ -7,33 +7,34 @@ public enum TileType { RoomInnerTile, RoomOuterTile, CorridorTile };
 public class FloorTile
 {
     private GameObject tile;            // The floor tile itself
-    private GameObject UpperWall;       // Upper wall of tile - towards positive Z
-    private GameObject DownWall;        // Down wall of tile - towards negative Z
-    private GameObject RightWall;       // Right wall of tile - towards positive X
-    private GameObject LeftWall;        // left wall of tile - towards negative X
+    private GameObject upperWall;       // Upper wall of tile - towards positive Z
+    private GameObject downWall;        // Down wall of tile - towards negative Z
+    private GameObject rightWall;       // Right wall of tile - towards positive X
+    private GameObject leftWall;        // left wall of tile - towards negative X
     private DungeonCell dungeonCell;    // Dungeon cell where the floor tile is
     private TileType tileType;          // The type of floor tile
 
-    public FloorTile(DungeonCell cell, Material material, Vector3 dimensions, Vector3 position, TileType tileType)
+    public FloorTile(DungeonCell cell, Material material, Vector3 dimensions, TileType tileType)
     {
         // Create primitive will attach to the game object a collider, a mesh filter and a mesh renderer
         tile = GameObject.CreatePrimitive(PrimitiveType.Cube);
         this.dungeonCell = cell;
         tile.GetComponent<MeshRenderer>().material = material;
         tile.transform.localScale = dimensions;
-        tile.transform.position = new Vector3(0.0f, dimensions.y * 0.5f, 0.0f) + position;
+        tile.transform.position = new Vector3(0.0f, dimensions.y * 0.5f, 0.0f) + cell.getCellWorldPosition();
         this.tileType = tileType;
         tile.name = "FloorTile";
     }
+
     public void setParent(GameObject parent, bool worldPositionStays)
     {
         tile.transform.SetParent(parent.transform, worldPositionStays);
     }
-    // Method to create a wall
+
     public void placeWall(Material material, float wallHeight, Direction direction)
     {
         // Do not place a wall twice
-        if(direction == Direction.Up && UpperWall != null || direction == Direction.Down && DownWall != null || direction == Direction.Right && RightWall != null || direction == Direction.Left && LeftWall != null)
+        if(direction == Direction.Up && upperWall != null || direction == Direction.Down && downWall != null || direction == Direction.Right && rightWall != null || direction == Direction.Left && leftWall != null)
         {
             return;
         }
@@ -58,22 +59,22 @@ public class FloorTile
             case Direction.Up:
                 position.z += tile.transform.localScale.z * 0.5f - wall.transform.localScale.z * 0.5f;
                 wall.name = "UpperWall";
-                UpperWall = wall;
+                upperWall = wall;
                 break;
             case Direction.Down:
                 position.z -= tile.transform.localScale.z * 0.5f - wall.transform.localScale.z * 0.5f;
                 wall.name = "DownWall";
-                DownWall = wall;
+                downWall = wall;
                 break;
             case Direction.Right:
                 position.x += tile.transform.localScale.x * 0.5f - wall.transform.localScale.x * 0.5f;
                 wall.name = "RightWall";
-                RightWall = wall;
+                rightWall = wall;
                 break;
             case Direction.Left:
                 position.x -= tile.transform.localScale.x * 0.5f - wall.transform.localScale.x * 0.5f;
                 wall.name = "LeftWall";
-                LeftWall = wall;
+                leftWall = wall;
                 break;
         }
         // Set wall position, as walls are game objects (class type) they are references, so a change in the original wall object will also change the corresponding wall property
@@ -86,44 +87,38 @@ public class FloorTile
         switch(direction)
         {
             case Direction.Up:
-                if(UpperWall != null)
+                if(upperWall != null)
                 {
-                    Object.Destroy(UpperWall);
-                    UpperWall = null;
+                    upperWall.transform.parent = null;
+                    Object.Destroy(upperWall);
+                    upperWall = null;
                 }
                 break;
             case Direction.Down:
-                if(DownWall != null)
+                if(downWall != null)
                 {
-                    Object.Destroy(DownWall);
-                    DownWall = null;
+                    downWall.transform.parent = null;
+                    Object.Destroy(downWall);
+                    downWall = null;
                 }
                 break;
             case Direction.Right:
-                if (RightWall != null)
+                if (rightWall != null)
                 {
-                    Object.Destroy(RightWall);
-                    RightWall = null;
+                    rightWall.transform.parent = null;
+                    Object.Destroy(rightWall);
+                    rightWall = null;
                 }
                 break;
             case Direction.Left:
-                if (LeftWall != null)
+                if (leftWall != null)
                 {
-                    Object.Destroy(LeftWall);
-                    LeftWall = null;
+                    leftWall.transform.parent = null;
+                    Object.Destroy(leftWall);
+                    leftWall = null;
                 }
                 break;
         }
-    }
-
-    public void DestroyFloorTile()
-    {
-        dungeonCell.removeFloorTile();
-        removeWall(Direction.Up);
-        removeWall(Direction.Down);
-        removeWall(Direction.Right);
-        removeWall(Direction.Left);
-        Object.Destroy(tile);
     }
 
     public DungeonCell getCorrespondingDungeonCell()
@@ -139,5 +134,16 @@ public class FloorTile
     public void setTileType(TileType type)
     {
         this.tileType = type;
+    }
+
+    public void DestroyFloorTile()
+    {
+        dungeonCell.removeFloorTile();
+        removeWall(Direction.Up);
+        removeWall(Direction.Down);
+        removeWall(Direction.Right);
+        removeWall(Direction.Left);
+        tile.transform.parent = null;
+        Object.Destroy(tile);
     }
 }

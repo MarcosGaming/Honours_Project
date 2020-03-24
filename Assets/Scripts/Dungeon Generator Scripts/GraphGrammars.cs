@@ -2,41 +2,47 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class DungeonGeneratorGraphGrammar : MonoBehaviour
+public class GraphGrammars : DungeonGenerator
 {
-    [SerializeField] Vector3 dungeonTopLeftCellPosition;    // Top left position of dungeon cell [0,0]
-
+    [Header("Each task is going to be a room")]
     [SerializeField] int minTaskNumber;                     // The minimum number of tasks in the graph
     [SerializeField] int maxTaskNumber;                     // The maximum number of tasks in the graph
-
+    [Header("Number of tries to reoder the rooms")]
     [SerializeField] int minOrganizeTasksTries;             // The minimum number of tries to apply the reorganize production rules
     [SerializeField] int maxOrganizeTasksTries;             // The maximum number of tries to apply the reorganize production rules
-
+    [Header("Probabilty of reording the rooms")]
     [Range(0.0f, 1.0f)]
     [SerializeField] float probabiltyApplyOrganizationRule; // The probablity of a reorganization rule to be applied
 
-    [SerializeField] int roomMinTilesWidth;                 // Minimum number of column cells a room needs to have
-    [SerializeField] int roomMaxTilesWidth;                 // Maximum number of column cells a room can have
-    [SerializeField] int roomMinTilesHeight;                // Minimum number of row cells a room needs to have
-    [SerializeField] int roomMaxTilesHeight;                // Maximum number of row cells a room can have
-
-    [SerializeField] Material floorMaterial;                // Material that will be used for the floor
-    [SerializeField] Vector3 floorTileDimensions;           // Dimensions of each floor tile
-    [SerializeField] Material wallMaterial;                 // Material of the walls
-    [SerializeField] float wallHeight;                      // Height of each wall
-
     private Graph graph;                                    // Graph containing all the nodes
-    private StartNode S;                                    // Node form which the grammar will generate the mission
-
-    private Dungeon dungeon;                                // Dungeon class which basically consits in a 2D array of cells
+    private StartNode S;                                    // Node form which the grammar will generate the mission (maybe remove and place below)
 
     private int minCorridorLengthWhenVertical;              // Minimum corridor length when it is placed vertically
     private int maxCorridorLengthWhenVertical;              // Maximum corridor length when it is placed vertically
     private int minCorridorLengthWhenHorizontal;            // Minimum corridor length when it is placed horizontally
     private int maxCorridorLengthWhenHorizontal;            // Maximum corridor length when it is placed horizontally
 
-    // Start is called before the first frame update
-    void Start()
+    private int exitRoomIndex;                              // Index of the last room in the dungeon rooms list
+
+    public override void BuildDungeon()
+    {
+        AssertProperties();
+        // Initialize starting node and graph
+        S = new StartNode();
+        graph = new Graph(S);
+        // Generate the graph with the mission
+        graph.GenerateMission(minTaskNumber, maxTaskNumber, minOrganizeTasksTries, maxOrganizeTasksTries, probabiltyApplyOrganizationRule);
+        // Transform the graph into the dungeon space
+        TransformGraphIntoDungeon();
+        // Set entrance and exit rooms
+        dungeon.chooseEntranceRoomAndExitRoom(0, exitRoomIndex);
+        // Set the corridors and rooms to be children of the dungeon game object
+        dungeon.setRoomsAndCorridorsAsDungeonChildren();
+        // Set that the dungeon has finished building
+        dungeonBuildingFinished = true;
+    }
+
+    protected override void AssertProperties()
     {
         // Make sure that the wall height is at least one
         wallHeight = Mathf.Max(1.0f, wallHeight);
@@ -55,29 +61,10 @@ public class DungeonGeneratorGraphGrammar : MonoBehaviour
         roomMinTilesHeight = Mathf.Max(roomMinTilesHeight, roomMaxTilesHeight / 2);
         // The min corridor length is going to be half the max room size
         minCorridorLengthWhenVertical = roomMaxTilesHeight / 2;
-        minCorridorLengthWhenHorizontal = roomMinTilesWidth / 2;
+        minCorridorLengthWhenHorizontal = roomMaxTilesWidth / 2;
         // The max corridor length is going to be equal to the max room size
         maxCorridorLengthWhenVertical = roomMaxTilesHeight;
         maxCorridorLengthWhenHorizontal = roomMaxTilesWidth;
-        // Build the dungeon
-        BuildDungeon();
-    }
-
-    // Update is called once per frame
-    void Update()
-    {
-        
-    }
-
-    private void BuildDungeon()
-    {
-        // Initialize starting node and graph
-        S = new StartNode();
-        graph = new Graph(S);
-        // Generate the graph with the mission
-        graph.GenerateMission(minTaskNumber, maxTaskNumber, minOrganizeTasksTries, maxOrganizeTasksTries, probabiltyApplyOrganizationRule);
-        // Transform the graph into the dungeon space
-        TransformGraphIntoDungeon();
     }
 
     private void TransformGraphIntoDungeon()
@@ -149,6 +136,11 @@ public class DungeonGeneratorGraphGrammar : MonoBehaviour
             }
             // Remove first node in the list
             nodesToVisit.RemoveAt(0);
+            // When the current node is the goal node, find the index of its room in the dungeon rooms list
+            if(currentNode is GoalNode)
+            {
+                exitRoomIndex = dungeon.getDungeonRooms().IndexOf(nodesWithRoom[currentNode]);
+            }
         }
     }
 

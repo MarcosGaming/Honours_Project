@@ -72,7 +72,7 @@ public class Corridor
             if (currentCell.getCellFloorTile() == null && currentCell.getCellColumnPositionInGrid() != endCell.getCellColumnPositionInGrid())
             {
                 // Create tile
-                FloorTile tile = new FloorTile(currentCell, floorMaterial, floorDimensions, currentCell.getCellWorldPosition(), TileType.CorridorTile);
+                FloorTile tile = new FloorTile(currentCell, floorMaterial, floorDimensions, TileType.CorridorTile);
                 // When traversing right or left the tile is going to need upper and down walls
                 tile.placeWall(wallMaterial, wallHeight, Direction.Up);
                 tile.placeWall(wallMaterial, wallHeight, Direction.Down);
@@ -144,7 +144,7 @@ public class Corridor
                         cornerWall2 = Direction.Left;
                     }
                     // Create tile
-                    FloorTile tile = new FloorTile(currentCell, floorMaterial, floorDimensions, currentCell.getCellWorldPosition(), TileType.CorridorTile);
+                    FloorTile tile = new FloorTile(currentCell, floorMaterial, floorDimensions, TileType.CorridorTile);
                     // Place corner tile walls
                     if(!leaveLastCellWalls)
                     {
@@ -168,7 +168,7 @@ public class Corridor
             if (currentCell.getCellFloorTile() == null)
             {
                 // Create tile
-                FloorTile tile = new FloorTile(currentCell, floorMaterial, floorDimensions, currentCell.getCellWorldPosition(), TileType.CorridorTile);
+                FloorTile tile = new FloorTile(currentCell, floorMaterial, floorDimensions, TileType.CorridorTile);
                 // When traversing up or down the tile is going to need right and left walls
                 tile.placeWall(wallMaterial, wallHeight, Direction.Right);
                 tile.placeWall(wallMaterial, wallHeight, Direction.Left);
@@ -227,6 +227,11 @@ public class Corridor
         }
     }
 
+    public GameObject getCorridorGameObject()
+    {
+        return corridor;
+    }
+
     public void DestroyCorridor()
     {
         foreach(FloorTile tile in corridorTiles)
@@ -234,6 +239,7 @@ public class Corridor
             tile.DestroyFloorTile();
         }
         corridorTiles.Clear();
+        corridor.transform.parent = null;
         Object.Destroy(corridor);
     }
 }

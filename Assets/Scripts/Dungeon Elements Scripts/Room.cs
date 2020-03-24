@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+
 public class Room
 {
     private GameObject room;                    // Empty game object that represents a room
@@ -43,7 +44,7 @@ public class Room
             int tileColumnPos = 0;
             for (int j = roomTopLeftCellColumn; j < roomTopLeftCellColumn + roomWidth; j++)
             {
-                floorTiles[tileRowPos, tileColumnPos] = new FloorTile(grid[i,j] ,floorTileMaterial, floorTileDimensions, grid[i, j].getCellWorldPosition(), TileType.RoomInnerTile);
+                floorTiles[tileRowPos, tileColumnPos] = new FloorTile(grid[i,j] ,floorTileMaterial, floorTileDimensions, TileType.RoomInnerTile);
                 grid[i, j].setCellFloorTile(floorTiles[tileRowPos, tileColumnPos]); 
                 tileColumnPos++;
             }
@@ -87,6 +88,11 @@ public class Room
         }
     }
 
+    public GameObject getRoomGameObject()
+    {
+        return room;
+    }
+
     public Vector3 getRoomCenter()
     {
         return roomCenter;
@@ -125,6 +131,20 @@ public class Room
     public List<FloorTile> getTilesRightColumn()
     {
         return tilesRightColumn;
+    }
+
+    public void DestroyRoom()
+    {
+        for(int i = 0; i < roomHeight - 1; i++)
+        {
+            for (int j = 0; j < roomWidth - 1; j++)
+            {
+                floorTiles[i, j].DestroyFloorTile();
+                floorTiles[i, j] = null;
+            }
+        }
+        room.transform.parent = null;
+        Object.Destroy(room);
     }
 }
 

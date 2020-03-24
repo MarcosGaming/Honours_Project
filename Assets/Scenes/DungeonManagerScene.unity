@@ -120,7 +120,7 @@ NavMeshSettings:
     debug:
       m_Flags: 0
   m_NavMeshData: {fileID: 0}
---- !u!1 &452264447
+--- !u!1 &251752671
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -128,56 +128,125 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 452264448}
-  - component: {fileID: 452264449}
+  - component: {fileID: 251752673}
+  - component: {fileID: 251752672}
+  - component: {fileID: 251752674}
+  - component: {fileID: 251752675}
+  - component: {fileID: 251752676}
   m_Layer: 0
-  m_Name: GameManager
+  m_Name: DungeonManager
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!4 &452264448
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 452264447}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_Children: []
-  m_Father: {fileID: 0}
-  m_RootOrder: 2
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &452264449
+--- !u!114 &251752672
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 452264447}
+  m_GameObject: {fileID: 251752671}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8d966d8772e1996499ab426cf77b16f1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  keyToGenerateDungeonsUsingBSP: 49
+  keyToGenerateDungeonsUsingDiggerAgent: 50
+  keyToGenerateDungeonsUsingGraphGrammars: 51
+  keyToSaveTheGeneratedDungeonAsPrefab: 52
+--- !u!4 &251752673
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 251752671}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 9.887076, y: 7.004202, z: 8.816241}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_RootOrder: 2
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &251752674
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 251752671}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f0957fe5f078cdc4da5c67fc525bc631, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  dungeonTopLeftCellPosition: {x: 0, y: 0, z: 0}
+  roomMinTilesWidth: 4
+  roomMaxTilesWidth: 10
+  roomMinTilesHeight: 4
+  roomMaxTilesHeight: 10
+  floorMaterial: {fileID: 2100000, guid: 6f3b764d69dc4d04d8e2ce516d2dfaa3, type: 2}
+  wallMaterial: {fileID: 2100000, guid: 5f73475cf0cad364b9800b85c2a229fc, type: 2}
+  floorTileDimensions: {x: 2, y: 0.5, z: 2}
+  wallHeight: 4
+  dungeonWidth: 50
+  dungeonHeight: 50
+  roomAndPartitionBorderMargin: 2
+--- !u!114 &251752675
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 251752671}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: bd8e3732cd2ffad4cbd3743e1ae4f9f0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   dungeonTopLeftCellPosition: {x: 0, y: 0, z: 0}
-  dungeonWidth: 50
-  dungeonHeight: 50
   roomMinTilesWidth: 4
   roomMaxTilesWidth: 10
   roomMinTilesHeight: 4
   roomMaxTilesHeight: 10
+  floorMaterial: {fileID: 2100000, guid: 6f3b764d69dc4d04d8e2ce516d2dfaa3, type: 2}
+  wallMaterial: {fileID: 2100000, guid: 417d3ef38761e434d91ee72bf63b5b44, type: 2}
+  floorTileDimensions: {x: 2, y: 0.5, z: 2}
+  wallHeight: 4
+  dungeonWidth: 50
+  dungeonHeight: 50
   corridorMinTilesLength: 4
   corridorMaxTilesLength: 8
-  floorMaterial: {fileID: 2100000, guid: 6f3b764d69dc4d04d8e2ce516d2dfaa3, type: 2}
-  floorTileDimensions: {x: 2, y: 0.5, z: 2}
-  wallMaterial: {fileID: 2100000, guid: 417d3ef38761e434d91ee72bf63b5b44, type: 2}
-  wallHeight: 3
   removeDirtyCorridors: 1
---- !u!1 &1931331459
+--- !u!114 &251752676
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 251752671}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9de7d1cbe2a60d84998b4f10867ee478, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  dungeonTopLeftCellPosition: {x: 0, y: 0, z: 0}
+  roomMinTilesWidth: 4
+  roomMaxTilesWidth: 10
+  roomMinTilesHeight: 4
+  roomMaxTilesHeight: 10
+  floorMaterial: {fileID: 2100000, guid: 6f3b764d69dc4d04d8e2ce516d2dfaa3, type: 2}
+  wallMaterial: {fileID: 2100000, guid: 5f73475cf0cad364b9800b85c2a229fc, type: 2}
+  floorTileDimensions: {x: 2, y: 0.5, z: 2}
+  wallHeight: 4
+  minTaskNumber: 10
+  maxTaskNumber: 13
+  minOrganizeTasksTries: 20
+  maxOrganizeTasksTries: 30
+  probabiltyApplyOrganizationRule: 0.8
+--- !u!1 &554471374
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -185,8 +254,8 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 1931331461}
-  - component: {fileID: 1931331460}
+  - component: {fileID: 554471376}
+  - component: {fileID: 554471375}
   m_Layer: 0
   m_Name: Directional Light
   m_TagString: Untagged
@@ -194,13 +263,13 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!108 &1931331460
+--- !u!108 &554471375
 Light:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1931331459}
+  m_GameObject: {fileID: 554471374}
   m_Enabled: 1
   serializedVersion: 9
   m_Type: 1
@@ -254,21 +323,21 @@ Light:
   m_UseBoundingSphereOverride: 0
   m_ShadowRadius: 0
   m_ShadowAngle: 0
---- !u!4 &1931331461
+--- !u!4 &554471376
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1931331459}
-  m_LocalRotation: {x: 0.40821788, y: -0.23456968, z: 0.10938163, w: 0.8754261}
+  m_GameObject: {fileID: 554471374}
+  m_LocalRotation: {x: 0.7071068, y: 0, z: 0, w: 0.7071068}
   m_LocalPosition: {x: 0, y: 3, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 0}
   m_RootOrder: 1
-  m_LocalEulerAnglesHint: {x: 50, y: -30, z: 0}
---- !u!1 &1933681769
+  m_LocalEulerAnglesHint: {x: 90, y: 0, z: 0}
+--- !u!1 &1759888417
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -276,9 +345,9 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 1933681772}
-  - component: {fileID: 1933681771}
-  - component: {fileID: 1933681770}
+  - component: {fileID: 1759888420}
+  - component: {fileID: 1759888419}
+  - component: {fileID: 1759888418}
   m_Layer: 0
   m_Name: Main Camera
   m_TagString: MainCamera
@@ -286,21 +355,21 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!81 &1933681770
+--- !u!81 &1759888418
 AudioListener:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1933681769}
+  m_GameObject: {fileID: 1759888417}
   m_Enabled: 1
---- !u!20 &1933681771
+--- !u!20 &1759888419
 Camera:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1933681769}
+  m_GameObject: {fileID: 1759888417}
   m_Enabled: 1
   serializedVersion: 2
   m_ClearFlags: 1
@@ -337,17 +406,17 @@ Camera:
   m_OcclusionCulling: 1
   m_StereoConvergence: 10
   m_StereoSeparation: 0.022
---- !u!4 &1933681772
+--- !u!4 &1759888420
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1933681769}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 1, z: -10}
+  m_GameObject: {fileID: 1759888417}
+  m_LocalRotation: {x: 0.47115713, y: -0, z: -0, w: 0.8820493}
+  m_LocalPosition: {x: 50, y: 123.5, z: -119.7}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 0}
   m_RootOrder: 0
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_LocalEulerAnglesHint: {x: 56.219, y: 0, z: 0}

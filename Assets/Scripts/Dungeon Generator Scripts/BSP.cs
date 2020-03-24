@@ -1,35 +1,43 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 
-// The dungeon generator is going to assume the following when placing rooms: right is positive x, left is negative x, up is positive z and down is negative z
-public class DungeonGeneratorBSP : MonoBehaviour
+public class BSP : DungeonGenerator
 {
-    [SerializeField] Vector3 dungeonTopLeftCellPosition;    // Top left position of dungeon cell [0,0]
+    [Header("Dungeon width and height in tiles")]
     [SerializeField] int dungeonWidth;                      // Number of columns the dungeon grid is going to have
     [SerializeField] int dungeonHeight;                     // Number of rows the dungeon grid is going to have
-
-    [SerializeField] int roomMinTilesWidth;                 // Minimum number of column cells a room needs to have
-    [SerializeField] int roomMaxTilesWidth;                 // Maximum number of column cells a room can have
-    [SerializeField] int roomMinTilesHeight;                // Minimum number of row cells a room needs to have
-    [SerializeField] int roomMaxTilesHeight;                // Maximum number of row cells a room can have
-
+    [Header("Margin between rooms and edge of partition")]
     [SerializeField] int roomAndPartitionBorderMargin;      // Margin between the rooms and the edge of a partition
-
-    [SerializeField] Material floorMaterial;                // Material that will be used for the floor
-    [SerializeField] Vector3 floorTileDimensions;           // Dimensions of each floor tile
-    [SerializeField] Material wallMaterial;                 // Material of the walls
-    [SerializeField] float wallHeight;                      // Height of each wall
 
     private int minPartitionWidth;                          // Minimum number of column cells a partition needs to have
     private int minPartitionHeight;                         // Minimum number of row cells a partition needs to have
 
-    private Dungeon dungeon;                                // Dungeon class which basically consits in a 2D array of cells
-
     private BSPTree dungeonTree;                            // Binary Space Partitioning tree that represents the dungeon
 
-    // Start is called before the first frame update
-    void Start()
+    public override void BuildDungeon()
+    {
+        AssertProperties();
+        // Create dungeon grid
+        dungeon = new Dungeon(dungeonWidth, dungeonHeight);
+        dungeon.createDungeonGrid(dungeonTopLeftCellPosition, floorTileDimensions);
+        // Create the root node of the tree
+        dungeonTree = new BSPTree(new BSPNode(null, dungeon.getDungeonGrid()[0, 0], dungeonWidth, dungeonHeight));
+        BSPNode root = dungeonTree.getRootNode();
+        // Iteratively create partitions
+        CreatePartition(root);
+        // Once all partitions and rooms within those partitions are created, starting from the deepest nodes, connect rooms from nodes corresponding to children from the same parent
+        ConnectRooms(dungeonTree.getRootNode().getLeftChildNode(), dungeonTree.getRootNode().getRightChildNode());
+        // Set the entrance and exit rooms randomly
+        dungeon.randomlyChooseEntranceRoomAndExitRoom();
+        // Set the corridors and rooms to be children of the dungeon game object
+        dungeon.setRoomsAndCorridorsAsDungeonChildren();
+        // Set that the dungeon has finished building
+        dungeonBuildingFinished = true;
+    }
+
+    protected override void AssertProperties()
     {
         // Make sure that the wall height is at least one
         wallHeight = Mathf.Max(1.0f, wallHeight);
@@ -51,28 +59,6 @@ public class DungeonGeneratorBSP : MonoBehaviour
         // Minimum partition width and height 
         minPartitionWidth = roomMinTilesWidth + roomAndPartitionBorderMargin;
         minPartitionHeight = roomMinTilesHeight + roomAndPartitionBorderMargin;
-        // Build the dungeon
-        BuildDungeon();
-    }
-
-    // Update is called once per frame
-    void Update()
-    {
-        
-    }
-
-    private void BuildDungeon()
-    {
-        // Create dungeon grid
-        dungeon = new Dungeon(dungeonWidth, dungeonHeight);
-        dungeon.createDungeonGrid(dungeonTopLeftCellPosition, floorTileDimensions);
-        // Create the root node of the tree
-        dungeonTree = new BSPTree(new BSPNode(null, dungeon.getDungeonGrid()[0,0], dungeonWidth, dungeonHeight));
-        BSPNode root = dungeonTree.getRootNode();
-        // Iteratively create partitions
-        CreatePartition(root);
-        // Once all partitions and rooms within those partitions are created, starting from the deepest nodes, connect rooms from nodes corresponding to children from the same parent
-        ConnectRooms(dungeonTree.getRootNode().getLeftChildNode(), dungeonTree.getRootNode().getRightChildNode());
     }
 
     // Every partition is going to create two new nodes
@@ -131,7 +117,7 @@ public class DungeonGeneratorBSP : MonoBehaviour
         // Check if the left child can be further subdivided
         BSPNode leftChild = parent.getLeftChildNode();
         // Partition can only be subdivided if there is enough space for two sub partitions
-        if (leftChild.getPartitionWidth() > (minPartitionWidth * 2.0f) && leftChild.getPartitionHeight() > (minPartitionHeight * 2.0f))
+        if (leftChild.getPartitionWidth() > (minPartitionWidth * 2) && leftChild.getPartitionHeight() > (minPartitionHeight * 2))
          {
              CreatePartition(leftChild);
          }
@@ -143,7 +129,7 @@ public class DungeonGeneratorBSP : MonoBehaviour
         // Check if the right child can be further subdivided
         BSPNode rightChild = parent.getRightChildNode();
         // Partition can only be subdivided if there is enough space for two sub partitions
-        if (rightChild.getPartitionWidth() > (minPartitionWidth * 2.0f) && rightChild.getPartitionHeight() > (minPartitionHeight * 2.0f))
+        if (rightChild.getPartitionWidth() > (minPartitionWidth * 2) && rightChild.getPartitionHeight() > (minPartitionHeight * 2))
         {
             CreatePartition(rightChild);
         }
@@ -209,6 +195,22 @@ public class DungeonGeneratorBSP : MonoBehaviour
             }
         }
         return node;
+    }
+
+    // A BSP tree is basically going to have a root node from which the tree is going to be traversed
+    private class BSPTree
+    {
+        private BSPNode rootNode;
+
+        public BSPTree(BSPNode rootNode)
+        {
+            this.rootNode = rootNode;
+        }
+
+        public BSPNode getRootNode()
+        {
+            return rootNode;
+        }
     }
 
     // Node of the BSP tree
@@ -312,22 +314,7 @@ public class DungeonGeneratorBSP : MonoBehaviour
             int randomHeight = Random.Range(roomMinTilesHeight, maxHeight + 1);
             // Create room
             this.setPartitionRoom(new Room(dungeon, randomRow, randomColumn, randomHeight, randomWidth, floorTileDimensions, floorMaterial, wallHeight, wallMaterial));
-        }
-    }
-
-    // A BSP tree is basically going to have a root node from which the tree is going to be traversed
-    private class BSPTree
-    {
-        private BSPNode rootNode;
-
-        public BSPTree(BSPNode rootNode)
-        {
-            this.rootNode = rootNode;
-        }
-
-        public BSPNode getRootNode()
-        {
-            return rootNode;
+            dungeon.getDungeonRooms().Add(this.getPartitionRoom());
         }
     }
 }

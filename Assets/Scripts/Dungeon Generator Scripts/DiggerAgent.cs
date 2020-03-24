@@ -2,33 +2,40 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class DungeonGeneratorDiggerAgent : MonoBehaviour
+public class DiggerAgent : DungeonGenerator
 {
-    [SerializeField] Vector3 dungeonTopLeftCellPosition;    // Top left position of dungeon cell [0,0]
+    [Header("Dungeon width and height in tiles")]
     [SerializeField] int dungeonWidth;                      // Number of columns the dungeon grid is going to have
     [SerializeField] int dungeonHeight;                     // Number of rows the dungeon grid is going to have
-
-    [SerializeField] int roomMinTilesWidth;                 // Minimum number of column cells a room needs to have
-    [SerializeField] int roomMaxTilesWidth;                 // Maximum number of column cells a room can have
-    [SerializeField] int roomMinTilesHeight;                // Minimum number of row cells a room needs to have
-    [SerializeField] int roomMaxTilesHeight;                // Maximum number of row cells a room can have
-
+    [Header("Corridor length in tiles")]
     [SerializeField] int corridorMinTilesLength;            // Minimum number of tiles of length a corridor can be
     [SerializeField] int corridorMaxTilesLength;            // Maximum number of tiles of length a corridor can be
-
-    [SerializeField] Material floorMaterial;                // Material that will be used for the floor
-    [SerializeField] Vector3 floorTileDimensions;           // Dimensions of each floor tile
-    [SerializeField] Material wallMaterial;                 // Material of the walls
-    [SerializeField] float wallHeight;                      // Height of each wall
-
-    private Dungeon dungeon;                                // Dungeon class which basically consits in a 2D array of cells
-
+    [Header("Remove corridors that lead to no room")]
     [SerializeField] bool removeDirtyCorridors;             // Wheter to remove corridors that lead to no room or not
 
-    private DiggerAgent diggerAgent;                        // DiggerAgent objet that is going to build the dungeon
+    private Digger digger;                                  // DiggerAgent objet that is going to build the dungeon
 
-    // Start is called before the first frame update
-    void Start()
+    public override void BuildDungeon()
+    {
+        AssertProperties();
+        // Create dungeon grid
+        dungeon = new Dungeon(dungeonHeight, dungeonWidth);
+        dungeon.createDungeonGrid(dungeonTopLeftCellPosition, floorTileDimensions);
+        // Initialise digger
+        digger = new Digger(dungeon, corridorMinTilesLength, corridorMaxTilesLength, removeDirtyCorridors);
+        // Place digger in a random dungeon cell leaving a margin on the right and the bottom parts of the grid for the first room
+        digger.SetDiggerInitialPosition(roomMinTilesWidth, roomMinTilesHeight);
+        // Create dungeon
+        digger.DigDungeon(roomMinTilesWidth, roomMaxTilesWidth, roomMinTilesHeight, roomMaxTilesHeight, floorTileDimensions, floorMaterial, wallHeight, wallMaterial);
+        // Set entrance and exit rooms
+        dungeon.chooseEntranceRoomAndExitRoom(0, dungeon.getDungeonRooms().Count - 1);
+        // Set the corridors and rooms to be children of the dungeon game object
+        dungeon.setRoomsAndCorridorsAsDungeonChildren();
+        // Set that the dungeon has finished building
+        dungeonBuildingFinished = true;
+    }
+
+    protected override void AssertProperties()
     {
         // Make sure that the wall height is at least one
         wallHeight = Mathf.Max(1.0f, wallHeight);
@@ -41,37 +48,17 @@ public class DungeonGeneratorDiggerAgent : MonoBehaviour
         roomMinTilesHeight = Mathf.Max(roomMinTilesHeight, 4);
         // Make sure that the min corridor width is at least 2
         corridorMinTilesLength = Mathf.Max(corridorMinTilesLength, 2);
-        // Make sure that the dungeon width and height selected by the user is at least twice as big the minimum room width and height
-        dungeonWidth = Mathf.Max(dungeonWidth, roomMinTilesWidth * 2);
-        dungeonHeight = Mathf.Max(dungeonHeight, roomMinTilesHeight * 2);
+        // Make sure that the dungeon width and height selected by the user is at least four times bigger than the minimum room width and height
+        dungeonWidth = Mathf.Max(dungeonWidth, roomMinTilesWidth * 4);
+        dungeonHeight = Mathf.Max(dungeonHeight, roomMinTilesHeight * 4);
         // Make sure that the maximum width and height of a room is greater or equal to the minimum height and width of a room
         roomMaxTilesWidth = Mathf.Max(roomMinTilesWidth, roomMaxTilesWidth);
         roomMaxTilesHeight = Mathf.Max(roomMinTilesHeight, roomMaxTilesHeight);
         // Make sure that the maximum corridor length is greater or equal to the minimum length of a corridor
         corridorMaxTilesLength = Mathf.Max(corridorMinTilesLength, corridorMaxTilesLength);
-        BuildDungeon();
     }
 
-    // Update is called once per frame
-    void Update()
-    {
-
-    }
-
-    private void BuildDungeon()
-    {
-        // Create dungeon grid
-        dungeon = new Dungeon(dungeonHeight, dungeonWidth);
-        dungeon.createDungeonGrid(dungeonTopLeftCellPosition, floorTileDimensions);
-        // Initialise digger
-        diggerAgent = new DiggerAgent(dungeon, corridorMinTilesLength, corridorMaxTilesLength, removeDirtyCorridors);
-        // Place digger in a random dungeon cell leaving a margin on the right and the bottom parts of the grid for the first room
-        diggerAgent.SetDiggerInitialPosition(roomMinTilesWidth, roomMinTilesHeight);
-        // Create dungeon
-        diggerAgent.DigDungeon(roomMinTilesWidth, roomMaxTilesWidth, roomMinTilesHeight, roomMaxTilesHeight, floorTileDimensions, floorMaterial, wallHeight, wallMaterial);
-    }
-
-    private class DiggerAgent
+    private class Digger
     {
         private Dungeon dungeon;            // Dungeon
 
@@ -93,7 +80,7 @@ public class DungeonGeneratorDiggerAgent : MonoBehaviour
         private FloorTile lastTileUsedAsCorridorConnection;                         // Last tile from which corridors where created
         private Direction directionOfWallToRebuild;                                 // Direction of the last tile wall that was removed to connect it with the corridors
 
-        public DiggerAgent(Dungeon dungeon, int minCorridorsLength, int maxCorridorsLength, bool removeDirtyCorridors)
+        public Digger(Dungeon dungeon, int minCorridorsLength, int maxCorridorsLength, bool removeDirtyCorridors)
         {
             this.dungeon = dungeon;
 
@@ -124,8 +111,10 @@ public class DungeonGeneratorDiggerAgent : MonoBehaviour
 
         public void DigDungeon(int roomMinWidth, int roomMaxWidth, int roomMinHeight, int roomMaxHeight, Vector3 tileDimensions, Material floorMaterial, float wallHeight, Material wallMaterial)
         {
-            // Try to build a room from the current digger position
-            if(corridorPlaced || placeFirstRoom)
+            // Reset room placed boolean
+            roomPlaced = false;
+            // Try to build a room from the current digger position only when a corridor has been placed, otherwise rooms can be disconnected
+            if (corridorPlaced || placeFirstRoom)
             {
                 TryToPlaceRoom(roomMinWidth, roomMaxWidth, roomMinHeight, roomMaxHeight, tileDimensions, floorMaterial, wallHeight, wallMaterial);
                 placeFirstRoom = false;
@@ -137,9 +126,9 @@ public class DungeonGeneratorDiggerAgent : MonoBehaviour
             {
                 TryToBuildCorridorFromRoom(tileDimensions, floorMaterial, wallHeight, wallMaterial);
             }
-            else
+            else if(dirtyCorridors.Count > 0)
             {
-                // If no room was created in the previous iteration the digger is in the last tile of a corridor
+                // If no room was created in the previous iteration and there are dirty corridors placed the digger is in the last tile of a corridor
                 TryToBuildCorridorFromCorridor(tileDimensions, floorMaterial, wallHeight, wallMaterial);
                 if (!corridorPlaced)
                 {
@@ -150,6 +139,7 @@ public class DungeonGeneratorDiggerAgent : MonoBehaviour
                     {
                         foreach(Corridor corridor in dirtyCorridors)
                         {
+                            dungeon.getDungeonCorridors().Remove(corridor);
                             corridor.DestroyCorridor();
                         }
                         dirtyCorridors.Clear();
@@ -174,10 +164,8 @@ public class DungeonGeneratorDiggerAgent : MonoBehaviour
         // Method that will try to build a room from the cell the digger is currently at
         private void TryToPlaceRoom(int roomMinWidth, int roomMaxWidth, int roomMinHeight, int roomMaxHeight, Vector3 tileDimensions, Material floorMaterial, float wallHeight, Material wallMaterial)
         {
-            // Reset room placed boolean
-            roomPlaced = false;
             // If a corridor was placed in the previous iteration, the room needs to start from the next cell to the actual current cell based on the direcion the digger agent was going
-            DungeonCell previousCurrent = currentCell;
+            DungeonCell previousCurrent = dungeon.getDungeonGrid()[currentCell.getCellRowPositionInGrid(), currentCell.getCellColumnPositionInGrid()];
             Direction directionToRemoveWall = Direction.Unknown;
             if (corridorPlaced)
             {
