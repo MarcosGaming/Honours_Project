@@ -212,7 +212,7 @@ MonoBehaviour:
   roomMinTilesHeight: 4
   roomMaxTilesHeight: 10
   floorMaterial: {fileID: 2100000, guid: 6f3b764d69dc4d04d8e2ce516d2dfaa3, type: 2}
-  wallMaterial: {fileID: 2100000, guid: 417d3ef38761e434d91ee72bf63b5b44, type: 2}
+  wallMaterial: {fileID: 2100000, guid: 5f73475cf0cad364b9800b85c2a229fc, type: 2}
   floorTileDimensions: {x: 2, y: 0.5, z: 2}
   wallHeight: 4
   dungeonWidth: 50

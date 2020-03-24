@@ -3981,14 +3981,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 06c926770ab669d4cb6926b8f4895f29, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  scene: DIGGER1
+  scene: Level2
   randomScenes:
-  - DIGGER2
-  - DIGGER3
-  - GRAMMARS2
-  - GRAMMARS3
-  - BSP2
-  - BSP3
+  - Level4
+  - Level5
+  - Level6
+  - Level7
+  - Level8
+  - Level9
   player: {fileID: 1701534382}
   entranceTeleporter: {fileID: 100000, guid: 931a75669ffc1214f93c0d969895e8a1, type: 3}
   exitTeleporter: {fileID: 100000, guid: 9966aa3c008742041a74ffbeb93083cd, type: 3}

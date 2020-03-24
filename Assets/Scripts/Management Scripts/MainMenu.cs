@@ -17,7 +17,7 @@ public class MainMenu : MonoBehaviour
         if (Input.GetKeyDown(KeyCode.Return))
         {
             // Load last scene in the build
-            UnityEngine.SceneManagement.SceneManager.LoadScene("BSP1");
+            UnityEngine.SceneManagement.SceneManager.LoadScene("Level1");
         }
         // If escape is pressed, exit the application
         if (Input.GetKeyDown(KeyCode.Escape))
