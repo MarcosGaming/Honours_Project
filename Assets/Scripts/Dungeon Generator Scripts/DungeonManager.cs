@@ -69,6 +69,10 @@ public class DungeonManager : MonoBehaviour
                 UnityEditor.EditorApplication.isPlaying = false;
             #endif
         }
+        else if(Input.GetKeyDown(KeyCode.Escape))
+        {
+            Application.Quit();
+        }
     }
 
     // Method to remove any dungeon generated

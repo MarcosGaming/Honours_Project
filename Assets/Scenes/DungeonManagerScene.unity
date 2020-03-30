@@ -470,8 +470,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 260, y: -60}
-  m_SizeDelta: {x: 500, y: 100}
+  m_AnchoredPosition: {x: 260, y: -70}
+  m_SizeDelta: {x: 500, y: 120}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1186697372
 MonoBehaviour:
@@ -510,7 +510,10 @@ MonoBehaviour:
     PRESS 2 FOR AGENT-DIGGER DUNGEON GENERATION
 
 
-    PRESS 3 FOR GRAMMARS DUNGEON GENERATION'
+    PRESS 3 FOR GRAMMARS DUNGEON GENERATION
+
+
+    PRESS ESC TO EXIT'
 --- !u!222 &1186697373
 CanvasRenderer:
   m_ObjectHideFlags: 0
